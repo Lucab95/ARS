@@ -2,7 +2,8 @@
 
 import numpy as np
 from math import pi, cos
-import plotting as plt
+import matplotlib.pyplot as plt
+from matplotlib import cm
 import random
 
 
@@ -15,8 +16,7 @@ PSO_ITERATIONS = 1000
 
 # === Defining Benchmark Functions ===
 def Rosenbrock(x, y):
-    a = 0;
-    b = 100;
+    a, b = 0, 100;
     return (a-x)**2 + b*(y-x**2)**2;
 
 def Rastrigin(x, y):
@@ -160,39 +160,68 @@ for t in range(1, PSO_ITERATIONS):
 
 
 # == Plotting iterations ==
+def GetPlottingMatrices(x, y, func):
+    X, Y = np.meshgrid(x, y)
+    z = np.zeros(shape=(X.shape))
+    for ix in range(X.shape[0]):
+        for iy in range(X.shape[0]):
+            z[ix, iy] = func(X[ix, iy], Y[ix, iy])
+    return X, Y, z
+
+def PlotFunction(x, y, func):
+    X, Y, z = GetPlottingMatrices(x, y, func)
+    fig = plt.figure()
+    ax = fig.gca()
+    plt.contourf(X, Y, z, cmap=cm.jet)
+    plt.colorbar(aspect=5)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    return plt, ax
+
+def DrawMarker(ax, x, y, value, is_final_mark):
+    if is_final_mark == True:
+        ax.plot(x, y, color='red', marker='x', markersize=20, markeredgewidth=4)
+    else:
+        ax.plot(x, y, color='magenta', marker='o', markersize=5, markeredgewidth=4)
+    ax.annotate(value, (x, y))
+
+def PlottingSegment(ax, Xa, Xb, Ya, Yb):  # segment from points A to B
+    ax.plot([Xa, Xb], [Ya, Yb], linewidth=1, color='black')
+
 STEPPINGS = 200
 print("PSO walkthroug (every ", STEPPINGS, " steps)")
 
-colors = ['white', 'purple', 'orange', 'yellow', 'black']
+#colors = ['white', 'purple', 'orange', 'yellow', 'black']
 
 round = 0
+STEPPINGS = 200
+NAME_PARTICLES = ["A","B","C","D","E","F","G","H","I","L","M","N","O","P","Q","R","S","T","U","V","Z"]
 for t2 in range(PSO_ITERATIONS):
 
-    STEPPINGS = 100
     if t2 % STEPPINGS != 0:
         continue
     
-    v, ax = plt.Plot2D(x, y, z_func)
+    v, ax = PlotFunction(x, y, z_func)
     array_old_X, array_old_Y = [], []
     
     for t in range(0, t2, STEPPINGS):
         if t == 0: #init
             for p in range(N_PARTICLES):
                 #print(CRON_S[t][p][0], CRON_S[t][p][1])
-                plt.DrawMarker2DEx(ax, CRON_S[t][p][0], CRON_S[t][p][1], colors[p], str(round))
+                DrawMarker(ax, CRON_S[t][p][0], CRON_S[t][p][1], NAME_PARTICLES[p] + str(round), False)
                 array_old_X.append(CRON_S[t][p][0])
                 array_old_Y.append(CRON_S[t][p][1])
     
         else:#if t == PSO_ITERATIONS-1 or t%10==0:
             for p in range(N_PARTICLES):
-                plt.PlottingSegment(ax, CRON_S[t][p][0], array_old_X[p], CRON_S[t][p][1], array_old_Y[p])
+                PlottingSegment(ax, CRON_S[t][p][0], array_old_X[p], CRON_S[t][p][1], array_old_Y[p])
                 array_old_X[p]=CRON_S[t][p][0]
                 array_old_Y[p]=CRON_S[t][p][1]
                 
                 if t == PSO_ITERATIONS-1:
-                    plt.DrawMarker2D(ax, CRON_S[t][p][0], CRON_S[t][p][1], True)
+                    DrawMarker(ax, CRON_S[t][p][0], CRON_S[t][p][1], NAME_PARTICLES[p] + str(round), True)
                 else:
-                    plt.DrawMarker2DEx(ax, CRON_S[t][p][0], CRON_S[t][p][1], colors[p], str(round))
+                    DrawMarker(ax, CRON_S[t][p][0], CRON_S[t][p][1], NAME_PARTICLES[p] + str(round), False)
     round +=1
 
     v.show()
