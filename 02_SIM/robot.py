@@ -5,6 +5,7 @@
 from copy import deepcopy
 import math
 import pygame
+from shapely.geometry import LineString, Point
 
 X, Y, th = 0, 1, 2
 L, R = 0, 1
@@ -12,89 +13,19 @@ inf_number = math.pow(10,50)
 
 class Robot():
   def __init__(self, length, max_velocity):
-    self.__position = [0, 0, 0] #X Y Th
-    self.__axis_length = length
-    self.__max_velocity = max_velocity
-    self.__motor = [0, 0]
-    self.__color = [90, 90, 90]
-    self.__sensor = [0] * 12
-
-  #def _getPositionVector(self):
-  #  return deepcopy(self.__position)
-#
-  #def _setPositionVector(self, new_vector):
-  #  if len(new_vector) == 3:
-  #    self.__position = deepcopy(new_vector)
-  #  else:
-  #    print("wrong new position vector", new_vector)
-#
-  #positionVector = property(_getPositionVector, _setPositionVector)
-
-  def _getPosition(self):
-    return deepcopy(self.__position)
-
-  def _setPosition(self, value):
-    self.__position = deepcopy(value)
-
-  position = property(_getPosition, _setPosition)
-
-  def _getAxisLength(self):
-    return deepcopy(self.__axis_length)
-
-  def _setAxisLength(self, value):
-    self.__axis_length = deepcopy(value)
-
-  axis_length = property(_getAxisLength, _setAxisLength)
-
-  def _getMaxVelocity(self):
-    return deepcopy(self.__max_velocity)
-
-  def _setMaxVelocity(self, value):
-    self.__max_velocity = deepcopy(value)
-
-  max_velocity = property(_getMaxVelocity, _setMaxVelocity)
-
-  #def _getMotorVector(self):
-  #  return deepcopy(self.__motor)
-#
-  #def _setMotorVector(self, new_vector):
-  #  if len(new_vector) == 2:
-  #    self.__motor = deepcopy(new_vector)
-  #  else:
-  #    print("wrong new motor vector", new_vector)
-#
-  #motor_vector = property(_getMotorVector, _setMotorVector)
-
-  def _getMotor(self):
-    return deepcopy(self.__motor)
-
-  def _setMotor(self, value):
-    self.__motor = deepcopy(value)
-
-  motor = property(_getMotor, _setMotor)
-
-  def _getColor(self):
-    return deepcopy(self.__color)
-
-  def _setColor(self, value):
-    self.__color = deepcopy(value)
-
-  color = property(_getColor, _setColor)
-
-  def _getSensor(self):
-    return deepcopy(self.__sensor)
-
-  def _setSensor(self, value):
-    self.__sensor = deepcopy(value)
-
-  sensor = property(_getSensor, _setSensor)
+    self.position = [0, 0, 0] #X Y Th
+    self.axis_length = length
+    self.max_velocity = max_velocity
+    self.motor = [0, 0]
+    self.color = [90, 90, 90]
+    self.sensor_list = [0] * 12
 
   # force value to stay in a range[min, max]
-  def SetInARange(self, value, min, max):
-    if value > self.max_v:
-      value = self.max_v
-    elif value < -self.max_v:
-      value = -self.max_v
+  def SetInARange(self, value):
+    if value > self.max_velocity:
+      value = self.max_velocity
+    elif value < -self.max_velocity:
+      value = -self.max_velocity
     return value
 
   def NewMotorVelocity(self, n_motor, value):
@@ -151,61 +82,61 @@ class Robot():
     coord_robot = pygame.draw.circle(screen, robot_color, (self.round(self.position[X]), self.round(self.position[Y])), self.round(0.5*self.axis_length), 2)
 
     # Head of the robot
-    head_x = self.position[X] + (0.4*self.axis_length) * math.cos(self.position[th])
-    head_y = self.position[Y] + (0.4*self.axis_length) * math.sin(self.position[th])
+    head_x = self.position[X] + (0.5*self.axis_length * math.cos(self.position[th]) * 1)
+    head_y = self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th]) * 1)
     pygame.draw.line(screen, robot_color, (self.round(self.position[X]), self.round(self.position[Y])), [head_x, head_y], 2)
+
+    def RobotLabel(value, x, y, font_size):
+      font = pygame.font.SysFont("dejavusans", font_size)
+      label = font.render(str(format(value, '.0f')), True, (0,0,0))
+      posX = x - 0.5*label.get_rect().width
+      posY = y - 0.5*label.get_rect().height
+      screen.blit(label, (self.round(posX),self.round(posY)))
 
     # Sensors of the robot
     angle = self.position[th]
-    fontObj = pygame.font.Font("C:/Windows/Fonts/comicbd.ttf", 10)  # Font of the messages
-    for val in self.sensor:
-      pos_x = self.position[X] + (0.7*self.axis_length) * math.cos(self.position[th])
-      pos_y = self.position[Y] + (0.7*self.axis_length) * math.sin(self.position[th])
-      textSurfaceObj = fontObj.render(str(val), True, [0,0,0], [255,255,255])
-      textRectObj = textSurfaceObj.get_rect()  #
-      textRectObj.center = (self.round(pos_x), self.round(pos_y))
-      screen.blit(textSurfaceObj, textRectObj)
+    for val in self.sensor_list:
+      RobotLabel(
+        val,
+        self.position[X] + (0.5*self.axis_length * math.cos(angle) * 1.2),
+        self.position[Y] + (0.5*self.axis_length * math.sin(angle) * 1.2),
+        18
+      )
       angle += math.radians(30)
 
-    # Velocities of the motors
-    fontObj2 = pygame.font.Font("C:/Windows/Fonts/comicbd.ttf", 15)  # Font of the messages
-
-    pos_x = self.position[X] + (0.5*self.axis_length) * math.cos(self.position[th] - math.radians(90))
-    pos_y = self.position[Y] + (0.5*self.axis_length) * math.sin(self.position[th] - math.radians(90))
-    textSurfaceObj = fontObj2.render(str(self.motor[L]), True, [0,0,0], [255,255,255])  # Left motor
-    textRectObj = textSurfaceObj.get_rect()
-    textRectObj.center = (self.round(pos_x), self.round(pos_y))
-    screen.blit(textSurfaceObj, textRectObj)
-
-    pos_x = self.position[X] + (0.5*self.axis_length) * math.cos(self.position[th] + math.radians(90))
-    pos_y = self.position[Y] + (0.5*self.axis_length) * math.sin(self.position[th] + math.radians(90))
-    textSurfaceObj = fontObj2.render(str(self.motor[R]), True, [0,0,0], [255,255,255])  # Right motor
-    textRectObj = textSurfaceObj.get_rect()
-    textRectObj.center = (self.round(pos_x), self.round(pos_y))
-    screen.blit(textSurfaceObj, textRectObj)
-
-
-    #print("\n>>Speed:", self.speed, " (Right:", self.speed_right, ", Left:", self.speed_left, ")")
-    #print(">>Rotation: ", self.rotation)
-    #print(">>Direction:", self.direction)
+    # set motor labels
+    RobotLabel(
+      self.motor[L],
+      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] - math.radians(90)) * 0.4),
+      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] - math.radians(90)) * 0.4),
+      18
+    )
+    RobotLabel(
+      self.motor[R],
+      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] + math.radians(90)) * 0.4),
+      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] + math.radians(90)) * 0.4),
+      18
+    )
     return coord_robot
 
-  # TODO controlla
-  def use_sensors(self, env):
-    angle = self.direction
-    # print(env)
+  def use_sensors(self, screen, env):
+    angle = self.position[th]
+
     sensors = [None] * 12
+    distance_sensor = 200
     for i in range(12):
-      # Draw lines
-      sensor_x = int(self.position[0] + (self.length) * np.cos(
-        np.radians(angle)))  # self.length indicates how long has to be the sensor outside of the circle
-      sensor_y = int(self.position[1] + (self.length) * np.sin(np.radians(angle)))
-      start_x = int(self.position[0] + (self.distance_sensors + self.length) * np.cos(np.radians(angle)))
-      start_y = int(self.position[1]) + (self.distance_sensors + self.length) * np.sin(np.radians(angle))
-      sensors[i] = (pygame.draw.line(screen, WHITE, (start_x, start_y), (sensor_x, sensor_y), 1))
-      angle += 30
+      # create lines
+      sensor_x = self.position[X] + 0.5 * self.axis_length * math.cos(angle)
+      sensor_y = self.position[Y] + 0.5 * self.axis_length * math.sin(angle)
+
+      start_x = self.position[X] + (0.5 * self.axis_length + distance_sensor) * math.cos(angle)
+      start_y = self.position[Y] + (0.5 * self.axis_length + distance_sensor) * math.sin(angle)
+
+      sensors[i] = (pygame.draw.line(screen, (255, 0, 0), (self.round(start_x), self.round(start_y)), (self.round(sensor_x), self.round(sensor_y)), 1))
+
       # Check intersections
-      self.value_sensors[i] = self.distance_sensors  # Initializing sensors values
+      self.sensor_list[i] = distance_sensor  # Initializing sensors values
+
       # Creating the sensor line
       line_sensor = LineString([sensors[i].topleft, sensors[i].bottomright])
       for j in range(len(env)):
@@ -213,35 +144,13 @@ class Robot():
         line_env = LineString([env[j].topleft, env[j].bottomright])
         # If collision -> Take value
         if str(line_sensor.intersection(line_env)) != "LINESTRING EMPTY":
-          point = Point(self.position)
-          self.value_sensors[i] = int(point.distance(line_sensor.intersection(line_env)) - self.length)
+          point = Point((self.position[X], self.position[Y]))
+          self.sensor_list[i] = self.round(point.distance(line_sensor.intersection(line_env)) - self.axis_length)
 
-  def move_robot(self, sp, rot):
-    # Change speed
-    self.speed += sp
-    # Change rotation
-    self.rotation += rot
-    self.draw_robot()
-
-  def move_robot_complex(self, inc_right, inc_left):
-    # Change velocity wheels
-    self.speed_right += inc_right
-    self.speed_left += inc_left
-    # Change speed
-    self.speed = (self.speed_right + self.speed_left) / 2
-    # Calculating R (Point of Rotation)
-    try:  # If both speeds are zero -> R = 0 (Error when diving by 0)
-      self.R = (self.length / 2) * ((self.speed_left + self.speed_right) / (self.speed_right - self.speed_left))
-    except:
-      # self.R = np.inf
-      self.R = 999999999999999999999999999999999999999999999999999999999999999
-    # Calculating w (Rate Rotation or Rotation Angle)
-    self.w = (
-                       self.speed_right - self.speed_left) / self.length  # TODO probabilmente era questo che dava problemi perchè usava la lunghexza invece del raggio
+      angle += math.radians(30)
 
   def update_position(self, limits_env, dT):
-    # Timesteps
-    param = 2
+
     # Collission flag
     coll_flag = False
 
@@ -249,26 +158,22 @@ class Robot():
     new_position = self._ForwardKinematics(self.position[X], self.position[Y], self.position[th], dT)
 
     # Margin
-    margin_pixels = 1
-    # Limits of the angles
-    #if self.direction < 0:
-    #  self.direction = 359  # Limits in
-    #elif self.direction > 359:
-    #  self.direction = 0  # the angles
+    margin_pixels = 0
 
     # COLLISION DETECTION Checking limits environment
-    if new_position[X] + self.axis_length >= limits_env[0]:  # Right boundary
-      new_position[X] = limits_env[0] - self.axis_length - margin_pixels
+    robot_radius = 0.5*self.axis_length
+    if new_position[X] + robot_radius >= limits_env[0]:  # Right boundary
+      new_position[X] = limits_env[0] - robot_radius - margin_pixels
       coll_flag = True
-    elif new_position[X] - self.axis_length <= limits_env[1]:  # Left boundary
-      new_position[X] = limits_env[1] + self.axis_length + margin_pixels
+    elif new_position[X] - robot_radius <= limits_env[1]:  # Left boundary
+      new_position[X] = limits_env[1] + robot_radius + margin_pixels
       coll_flag = True
 
-    if new_position[Y] + self.axis_length >= limits_env[2]:  # Up boundary
-      new_position[Y] = limits_env[2] - self.axis_length - margin_pixels
+    if new_position[Y] + robot_radius >= limits_env[2]:  # Up boundary
+      new_position[Y] = limits_env[2] - robot_radius - margin_pixels
       coll_flag = True
-    elif new_position[Y] - self.axis_length <= limits_env[3]:  # Down boundary
-      new_position[Y] = limits_env[3] + self.axis_length + margin_pixels
+    elif new_position[Y] - robot_radius <= limits_env[3]:  # Down boundary
+      new_position[Y] = limits_env[3] + robot_radius + margin_pixels
       coll_flag = True
 
 
