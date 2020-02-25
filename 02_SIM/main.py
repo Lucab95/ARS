@@ -23,13 +23,12 @@ BLACK = 0, 0, 0
 GREEN = 0,255,0
 RED = 255,0,0
 BLUE = 0,0,255
-GREY = 90,90,90
+GREY = 90, 90, 90
 LIGHT_GREY = 150,150,150
 
-COLOUR_ROBOT = GREY
+COLOUR_ENVIROMENT = GREY
 COLOUR_CONT = BLACK
 COLOUR_FONT = LIGHT_GREY
-COLLISION_COLOUR = RED
 
 #######################################################
 ################# VARIABLES ###########################
@@ -61,10 +60,10 @@ class Environment():
 		prev = self.points[0]
 		rects = []
 		for point in self.points:
-			rects.append(pygame.draw.line(screen, COLOUR_ROBOT, prev, point, 2))
+			rects.append(pygame.draw.line(screen, COLOUR_ENVIROMENT, prev, point, 2))
 			prev = point
 		rects = rects[1:]
-		rects.append(pygame.draw.line(screen, COLOUR_ROBOT, self.points[-1], self.points[0], 2))		
+		rects.append(pygame.draw.line(screen, COLOUR_ENVIROMENT, self.points[-1], self.points[0], 2))
 		return rects
 
 	def get_limits(self):
@@ -91,7 +90,7 @@ robot = rb.Robot(2*ROBOT_RADIUS, MAX_VELOCITY)
 theta = np.radians(ROBOT_ORIENTATION)
 robotPosition = [ROBOT_POSITION[0], ROBOT_POSITION[1], theta] # X, Y, theta
 
-coords_robot = draw_robot(robotPosition, False) # Placing the robot
+coords_robot = robot.draw_robot(screen, False) # Placing the robot
 
 flag_coll = False # Inidcator of a collision
 
