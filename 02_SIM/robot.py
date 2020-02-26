@@ -16,7 +16,7 @@ class Robot():
     self.position = [0, 0, 0] #X Y Th
     self.axis_length = length
     self.max_velocity = max_velocity
-    self.motor = [0, 0]
+    self.motor = [10, 0]
     self.color = [90, 90, 90]
     self.sensor_list = [0] * 12
 
@@ -71,6 +71,41 @@ class Robot():
   def round(self, value):
     return int(round(value))
 
+  def round_Y(self, screen, value): # INVERT Y to get a right movement and axis origin
+    return int(round(screen.get_size()[Y] - value))
+
+  def use_sensors(self, screen, env):
+    angle = self.position[th]
+    sensors = [None] * 12
+    distance_sensor = 200
+    for i in range(12):
+      # create lines
+      sensor_x = self.position[X] + 0.5 * self.axis_length * math.cos(angle)
+      sensor_y = self.position[Y] + 0.5 * self.axis_length * math.sin(angle)
+
+      start_x = self.position[X] + (0.5 * self.axis_length + distance_sensor) * math.cos(angle)
+      start_y = self.position[Y] + (0.5 * self.axis_length + distance_sensor) * math.sin(angle)
+
+      pointA = (self.round(start_x), self.round_Y(screen, start_y))
+      pointB = (self.round(sensor_x), self.round_Y(screen, sensor_y))
+
+      sensors[i] = (pygame.draw.line(screen, (255, 0, 0), pointA, pointB, 1))
+
+      # Check intersections
+      self.sensor_list[i] = distance_sensor  # Initializing sensors values
+
+      # Creating the sensor line
+      line_sensor = LineString([sensors[i].topleft, sensors[i].bottomright])
+      for j in range(len(env)):
+        # Creating the environment line
+        line_env = LineString([env[j].topleft, env[j].bottomright])
+        # If collision -> Take value
+        if str(line_sensor.intersection(line_env)) != "LINESTRING EMPTY":
+          point = Point((self.position[X], self.position[Y]))
+          self.sensor_list[i] = self.round(point.distance(line_sensor.intersection(line_env)) - self.axis_length)
+
+      angle += math.radians(30)
+
   def draw_robot(self, screen, coll_flag):
     # Colours for collision
     if coll_flag:
@@ -79,19 +114,22 @@ class Robot():
       robot_color = self.color
 
     # Body of the robot
-    coord_robot = pygame.draw.circle(screen, robot_color, (self.round(self.position[X]), self.round(self.position[Y])), self.round(0.5*self.axis_length), 2)
+    center_robot = (self.round(self.position[X]), self.round_Y(screen, self.position[Y]))
+    coord_robot = pygame.draw.circle(screen, robot_color, center_robot, self.round(0.5*self.axis_length), 2)
 
     # Head of the robot
     head_x = self.position[X] + (0.5*self.axis_length * math.cos(self.position[th]) * 1)
     head_y = self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th]) * 1)
-    pygame.draw.line(screen, robot_color, (self.round(self.position[X]), self.round(self.position[Y])), [head_x, head_y], 2)
+
+    head_point = (self.round(head_x), self.round_Y(screen, head_y))
+    pygame.draw.line(screen, robot_color, center_robot, head_point, 2)
 
     def RobotLabel(value, x, y, font_size):
       font = pygame.font.SysFont("dejavusans", font_size)
       label = font.render(str(format(value, '.0f')), True, (0,0,0))
       posX = x - 0.5*label.get_rect().width
-      posY = y - 0.5*label.get_rect().height
-      screen.blit(label, (self.round(posX),self.round(posY)))
+      posY = y + 0.5*label.get_rect().height
+      screen.blit(label, (self.round(posX),self.round_Y(screen, posY)))
 
     # Sensors of the robot
     angle = self.position[th]
@@ -119,36 +157,6 @@ class Robot():
     )
     return coord_robot
 
-  def use_sensors(self, screen, env):
-    angle = self.position[th]
-
-    sensors = [None] * 12
-    distance_sensor = 200
-    for i in range(12):
-      # create lines
-      sensor_x = self.position[X] + 0.5 * self.axis_length * math.cos(angle)
-      sensor_y = self.position[Y] + 0.5 * self.axis_length * math.sin(angle)
-
-      start_x = self.position[X] + (0.5 * self.axis_length + distance_sensor) * math.cos(angle)
-      start_y = self.position[Y] + (0.5 * self.axis_length + distance_sensor) * math.sin(angle)
-
-      sensors[i] = (pygame.draw.line(screen, (255, 0, 0), (self.round(start_x), self.round(start_y)), (self.round(sensor_x), self.round(sensor_y)), 1))
-
-      # Check intersections
-      self.sensor_list[i] = distance_sensor  # Initializing sensors values
-
-      # Creating the sensor line
-      line_sensor = LineString([sensors[i].topleft, sensors[i].bottomright])
-      for j in range(len(env)):
-        # Creating the environment line
-        line_env = LineString([env[j].topleft, env[j].bottomright])
-        # If collision -> Take value
-        if str(line_sensor.intersection(line_env)) != "LINESTRING EMPTY":
-          point = Point((self.position[X], self.position[Y]))
-          self.sensor_list[i] = self.round(point.distance(line_sensor.intersection(line_env)) - self.axis_length)
-
-      angle += math.radians(30)
-
   def update_position(self, limits_env, dT):
 
     # Collission flag
@@ -175,7 +183,6 @@ class Robot():
     elif new_position[Y] - robot_radius <= limits_env[3]:  # Down boundary
       new_position[Y] = limits_env[3] + robot_radius + margin_pixels
       coll_flag = True
-
 
     self.position = deepcopy(new_position)
     return coll_flag

@@ -9,21 +9,19 @@ import robot as rb
 
 #######################################################
 ################# PROPERTIES ##########################
-SIZE_SCREEN = width, height = 1000, 780
+SIZE_SCREEN = width, height = 1000, 700
 COLOR_SCREEN = 255,255,255
 COLOR_ENVIROMENT = 90, 90, 90
 
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 40
-ROBOT_POSITION = [200, 200, 90] # X Y THETA in GRAD
+ROBOT_POSITION = [200, 200, 60] # X Y THETA in GRAD
 DELTA_T = .02
 FPS = 100 #Frames per second
 #######################################################
 #######################################################
 
-X, Y, th = 0, 1, 2
-L, R = 0, 1
 class Environment():
 	margin = 30
 	def __init__(self, points=[[0+margin,0+margin], [width-margin,0+margin], [width-margin,height-margin], [0+margin,height-margin]]):
@@ -48,6 +46,7 @@ class Environment():
 
 
 # == MAIN ==
+L, R = 0, 1
 pygame.init()  # Initializing library
 screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
 FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
