@@ -11,56 +11,59 @@ import robot as rb
 ################# PROPERTIES ##########################
 SIZE_SCREEN = width, height = 1000, 700
 COLOR_SCREEN = 255,255,255
-COLOR_ENVIROMENT = 90, 90, 90
-
+COLOR_ENVIROMENT = 90, 90, 255
+MAX_DISTANCE_SENSOR = 200
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 40
-ROBOT_POSITION = [200, 200, 180] # X Y THETA in GRAD
-DELTA_T = .02
-FPS = 100 #Frames per second
+ROBOT_POSITION = [200, 300, 0] # X Y THETA in GRAD
+DELTA_T = .03
+FPS = 200 #Frames per second
 #######################################################
 #######################################################
+L, R = 0, 1
+X, Y, th = 0, 1, 2
 
 class Environment():
-	margin = 30
-	def __init__(self, points=[[0+margin,0+margin], [width-margin,0+margin], [width-margin,height-margin], [0+margin,height-margin]]):
-		self.points = points
+	def __init__(self, walls):
+		self.walls = walls
+
+	def round_Y(self, point):  # INVERT Y to get a right movement and axis origin
+		return (int(round(point[X])), int(round(screen.get_size()[Y] - point[Y])))
 
 	def draw_environment(self):
-		prev = self.points[0]
-		rects = []
-		for point in self.points:
-			rects.append(pygame.draw.line(screen, COLOR_ENVIROMENT, prev, point, 2))
-			prev = point
-		rects = rects[1:]
-		rects.append(pygame.draw.line(screen, COLOR_ENVIROMENT, self.points[-1], self.points[0], 2))
-		return rects
-
-	def get_limits(self):
-		x_max = max(np.transpose(self.points)[0])
-		x_min = min(np.transpose(self.points)[0])
-		y_max = max(np.transpose(self.points)[1])
-		y_min = min(np.transpose(self.points)[1])
-		return x_max, x_min, y_max, y_min
-
+		#rects = []
+		for wall in self.walls:
+			pygame.draw.line(screen, COLOR_ENVIROMENT, self.round_Y(wall[0]), self.round_Y(wall[1]), 4)
+			#rects.append()
+		#return rects
 
 # == MAIN ==
-L, R = 0, 1
+collision_flag = False # Inidcator of a collision
 pygame.init()  # Initializing library
 screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
 FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
 
-env = Environment() # Creating the environment
-coords_env = env.draw_environment() # Drawing the environment
-limits_env = env.get_limits() # Getting the boundaries of the environment
+#init environment
+env = Environment(
+	[
+		[  (30,30), (970,30)],
+		[ (970,30),(970,670)],
+		[(970,670), (30,670)],
+		[ (30,670),  (30,30)],
+		[(200,200),(800,200)],
+		[(200,200),(500,500)],
+		[(800,200),(500,500)],
+	]
+)
 
-flag_coll = False # Inidcator of a collision
+#limits_environment = env.get_limits() # Getting the boundaries of the environment
+env.draw_environment() # Drawing the environment
 
 #init robot
-robot = rb.Robot(2*ROBOT_RADIUS, MAX_VELOCITY)
+robot = rb.Robot(2*ROBOT_RADIUS, MAX_VELOCITY, MAX_DISTANCE_SENSOR)
 robot.position = [ROBOT_POSITION[0], ROBOT_POSITION[1], math.radians(ROBOT_POSITION[2])]
-coords_robot = robot.draw_robot(screen, flag_coll) # Placing the robot
+robot.robot_moving(screen, env.walls, DELTA_T)
 
 # Main loop of the game
 while True:
@@ -92,10 +95,8 @@ while True:
 				robot.NewMotorVelocity(R,  0)
 
 	#Update robot and environment
-	coords_env = env.draw_environment() # Drawing the environment
-	col_flag = robot.update_position(limits_env, DELTA_T)
-	robot.use_sensors(screen, coords_env)
-	coords_robot = robot.draw_robot(screen, col_flag) # Placing the robot
+	env.draw_environment() # Drawing the environment
+	robot.robot_moving(screen, env.walls, DELTA_T)
 
 	#Update screen
 	pygame.display.update()
