@@ -16,7 +16,7 @@ COLOR_ENVIROMENT = 90, 90, 90
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 40
-ROBOT_POSITION = [200, 200, 60] # X Y THETA in GRAD
+ROBOT_POSITION = [200, 200, 180] # X Y THETA in GRAD
 DELTA_T = .02
 FPS = 100 #Frames per second
 #######################################################

@@ -16,7 +16,7 @@ class Robot():
     self.position = [0, 0, 0] #X Y Th
     self.axis_length = length
     self.max_velocity = max_velocity
-    self.motor = [10, 0]
+    self.motor = [0, 0]
     self.color = [90, 90, 90]
     self.sensor_list = [0] * 12
 
@@ -145,14 +145,14 @@ class Robot():
     # set motor labels
     RobotLabel(
       self.motor[L],
-      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] - math.radians(90)) * 0.4),
-      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] - math.radians(90)) * 0.4),
+      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] + math.radians(90)) * 0.4),
+      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] + math.radians(90)) * 0.4),
       18
     )
     RobotLabel(
       self.motor[R],
-      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] + math.radians(90)) * 0.4),
-      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] + math.radians(90)) * 0.4),
+      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] - math.radians(90)) * 0.4),
+      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] - math.radians(90)) * 0.4),
       18
     )
     return coord_robot
