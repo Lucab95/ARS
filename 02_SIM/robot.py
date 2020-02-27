@@ -14,13 +14,13 @@ from shapely.geometry import LineString, Point
 from shapely import affinity
 import math as m
 
-X, Y, th = 0, 1, 2
+X, Y, TH = 0, 1, 2
 L, R = 0, 1
 inf_number = math.pow(10,50)
 
 class Robot():
   def __init__(self, length, max_velocity, max_distance_sensor):
-    self.position = [0, 0, 0] #X Y Th
+    self.position = [0, 0, 0] #X Y TH
     self.axis_length = length
     self.max_velocity = max_velocity
     self.max_distance_sensor = max_distance_sensor
@@ -62,17 +62,17 @@ class Robot():
     globalPos = [0, 0, 0]  # X' Y' th'
 
     if self.motor[R] == self.motor[L]:
-      globalPos[0] = x + self.motor[R] * math.cos(th) * dT
-      globalPos[1] = y + self.motor[R] * math.sin(th) * dT
-      globalPos[2] = th
+      globalPos[X]  = x + self.motor[R] * math.cos(th) * dT
+      globalPos[Y]  = y + self.motor[R] * math.sin(th) * dT
+      globalPos[TH] = th
     else:
       odt = self._omega() * dT
       ICC = self._ICC(x, y, th)
       SIN_odt = math.sin(odt)
       COS_odt = math.cos(odt)
-      globalPos[0] = (COS_odt*(x - ICC[0]) - SIN_odt*(y - ICC[1])) + ICC[0]
-      globalPos[1] = (SIN_odt*(x - ICC[0]) + COS_odt*(y - ICC[1])) + ICC[1]
-      globalPos[2] = th + odt
+      globalPos[X]  = (COS_odt*(x - ICC[0]) - SIN_odt*(y - ICC[1])) + ICC[0]
+      globalPos[Y]  = (SIN_odt*(x - ICC[0]) + COS_odt*(y - ICC[1])) + ICC[1]
+      globalPos[TH] = th + odt
 
     return globalPos
 
@@ -83,18 +83,19 @@ class Robot():
     return int(round(screen.get_size()[Y] - value))
 
   def use_sensors(self, screen, wall_list):
-    angle = self.position[th]
+    angle = self.position[TH]
+    radius_robot = 0.5 * self.axis_length
 
     for i in range(len(self.sensor_list)):
       # Initializing sensors values
       self.sensor_list[i] = self.max_distance_sensor
 
       # create two point of the sensor line
-      sensor_x = self.position[X] + 0.5 * self.axis_length * math.cos(angle)
-      sensor_y = self.position[Y] + 0.5 * self.axis_length * math.sin(angle)
+      sensor_x = self.position[X] + radius_robot * math.cos(angle)
+      sensor_y = self.position[Y] + radius_robot * math.sin(angle)
 
-      start_x = self.position[X] + (0.5 * self.axis_length + self.max_distance_sensor) * math.cos(angle)
-      start_y = self.position[Y] + (0.5 * self.axis_length + self.max_distance_sensor) * math.sin(angle)
+      start_x = self.position[X] + (radius_robot + self.max_distance_sensor) * math.cos(angle)
+      start_y = self.position[Y] + (radius_robot + self.max_distance_sensor) * math.sin(angle)
 
       sensor_points = [(sensor_x, sensor_y), (start_x, start_y)]
 
@@ -112,7 +113,7 @@ class Robot():
         # If collision -> Take value
         if str(line_sensor.intersection(line_env)) != "LINESTRING EMPTY":
           point = Point((self.position[X], self.position[Y]))
-          self.sensor_list[i] = self.round(point.distance(line_sensor.intersection(line_env)) - self.axis_length)
+          self.sensor_list[i] = self.round(point.distance(line_sensor.intersection(line_env)) - radius_robot)
 
       angle += math.radians(30)
 
@@ -124,12 +125,13 @@ class Robot():
       robot_color = self.color
 
     # Body of the robot
+    radius_robot = 0.5*self.axis_length
     center_robot = (self.round(self.position[X]), self.round_Y(screen, self.position[Y]))
-    pygame.draw.circle(screen, robot_color, center_robot, self.round(0.5*self.axis_length), 2)
+    pygame.draw.circle(screen, robot_color, center_robot, self.round(radius_robot), 2)
 
     # Head of the robot
-    head_x = self.position[X] + (0.5*self.axis_length * math.cos(self.position[th]) * 1)
-    head_y = self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th]) * 1)
+    head_x = self.position[X] + (radius_robot * math.cos(self.position[TH]) * 1)
+    head_y = self.position[Y] + (radius_robot * math.sin(self.position[TH]) * 1)
 
     head_point = (self.round(head_x), self.round_Y(screen, head_y))
     pygame.draw.line(screen, robot_color, center_robot, head_point, 2)
@@ -142,12 +144,12 @@ class Robot():
       screen.blit(label, (self.round(posX),self.round_Y(screen, posY)))
 
     # Sensors of the robot
-    angle = self.position[th]
+    angle = self.position[TH]
     for val in self.sensor_list:
       RobotLabel(
         val,
-        self.position[X] + (0.5*self.axis_length * math.cos(angle) * 1.5),
-        self.position[Y] + (0.5*self.axis_length * math.sin(angle) * 1.5),
+        self.position[X] + (radius_robot * math.cos(angle) * 1.5),
+        self.position[Y] + (radius_robot * math.sin(angle) * 1.5),
         18
       )
       angle += math.radians(30)
@@ -155,34 +157,28 @@ class Robot():
     # set motor labels
     RobotLabel(
       self.motor[L],
-      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] + math.radians(90)) * 0.4),
-      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] + math.radians(90)) * 0.4),
+      self.position[X] + (radius_robot * math.cos(self.position[TH] + math.radians(90)) * 0.4),
+      self.position[Y] + (radius_robot * math.sin(self.position[TH] + math.radians(90)) * 0.4),
       18
     )
     RobotLabel(
       self.motor[R],
-      self.position[X] + (0.5*self.axis_length * math.cos(self.position[th] - math.radians(90)) * 0.4),
-      self.position[Y] + (0.5*self.axis_length * math.sin(self.position[th] - math.radians(90)) * 0.4),
+      self.position[X] + (radius_robot * math.cos(self.position[TH] - math.radians(90)) * 0.4),
+      self.position[Y] + (radius_robot * math.sin(self.position[TH] - math.radians(90)) * 0.4),
       18
     )
 
   def update_position(self, wall_list, dT):
-
-    # Collission flag
-    coll_flag = False
+    coll_flag = False # collission flag
+    radius_robot = 0.5 * self.axis_length
 
     # Calculating new X, Y & Orientation
-    new_position = self._ForwardKinematics(self.position[X], self.position[Y], self.position[th], dT)
+    new_position = self._ForwardKinematics(self.position[X], self.position[Y], self.position[TH], dT)
 
-    # COLLISION DETECTION Checking limits environment
-    def along_wall(vel_vec, wall_vec):
-      norm_wall = wall_vec / np.linalg.norm(wall_vec)
-      new_vel = norm_wall * np.dot(vel_vec, norm_wall)
-      return new_vel
-#
+    # Collision detection
     def check_collision(x, y, th, wall_list):
       robot_center = Point(x, y).buffer(1)
-      robot_shape = shapely.affinity.scale(robot_center, 0.5*self.axis_length, 0.5*self.axis_length)
+      robot_shape = shapely.affinity.scale(robot_center, radius_robot, radius_robot)
       traveled_line = LineString([(x, y), (self.position[X], self.position[Y])])
       wall_conflict = []
       for wall in wall_list:
@@ -195,12 +191,14 @@ class Robot():
           velocity_vector = np.subtract(new, self.position)
           wall_vector = np.subtract(wall[0], wall[1])
           # If the wall and the velocity are not orthogonal, find the component of the velocity along the wall
-          if wall_vector.dot([velocity_vector[0], velocity_vector[1]]) != 0:
-            new_vel = along_wall([velocity_vector[0], velocity_vector[1]], wall_vector)
+          velocity_vector_xy = [velocity_vector[X], velocity_vector[Y]]
+          if wall_vector.dot(velocity_vector_xy) != 0:
+            norm_wall = wall_vector / np.linalg.norm(wall_vector)
+            new_vel = norm_wall * np.dot(velocity_vector_xy, norm_wall)
             new_vel = np.append(new_vel, 0)
             new = np.add(self.position, new_vel)
-            x = new[0]
-            y = new[1]
+            x = new[X]
+            y = new[Y]
           # If they are orthogonal, put the robot as close as possible to the wall
           else:
             intersection_point = (0, 0)
@@ -211,8 +209,8 @@ class Robot():
             if len(intersect_line.coords) > 1:
               first_point = intersect_line.coords[0]
               second_point = intersect_line.coords[1]
-              point_x = (first_point[0] + second_point[0]) / 2
-              point_y = (first_point[1] + second_point[1]) / 2
+              point_x = 0.5*(first_point[X] + second_point[X])
+              point_y = 0.5*(first_point[Y] + second_point[Y])
               intersection_point = (point_x, point_y)
             elif intersect_line.geom_type == 'Point':
               intersection_point = intersect_line.coords[0]
@@ -221,13 +219,13 @@ class Robot():
               x = self.position[X]
               y = self.position[Y]
             else:
-              velocity_vector = 0.5*self.axis_length * (velocity_vector / np.linalg.norm(velocity_vector))
-              x = intersection_point[0] - velocity_vector[0]
-              y = intersection_point[1] - velocity_vector[1]
+              velocity_vector = radius_robot * (velocity_vector / np.linalg.norm(velocity_vector))
+              x = intersection_point[X] - velocity_vector[X]
+              y = intersection_point[Y] - velocity_vector[Y]
           wall_conflict.append(wall)
       return x, y, th
 
-    new_position = check_collision(new_position[X],new_position[Y],new_position[th], wall_list)
+    new_position = check_collision(new_position[X], new_position[Y], new_position[TH], wall_list)
 
     self.position = deepcopy(new_position)
     return coll_flag
