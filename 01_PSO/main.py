@@ -188,6 +188,13 @@ def DrawMarker(ax, x, y, value, is_final_mark):
 def PlottingSegment(ax, Xa, Xb, Ya, Yb):  # segment from points A to B
     ax.plot([Xa, Xb], [Ya, Yb], linewidth=1, color='black')
 
+
+
+
+
+
+###################### MAIN #########################
+
 STEPPINGS = 200
 print("PSO walkthroug (every ", STEPPINGS, " steps)")
 
