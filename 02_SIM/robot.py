@@ -150,7 +150,7 @@ class Robot():
         val,
         self.position[X] + (radius_robot * math.cos(angle) * 1.5),
         self.position[Y] + (radius_robot * math.sin(angle) * 1.5),
-        18
+        16
       )
       angle += math.radians(30)
 
@@ -176,7 +176,7 @@ class Robot():
     new_position = self._ForwardKinematics(self.position[X], self.position[Y], self.position[TH], dT)
 
     # Collision detection
-    def check_collision(x, y, th, wall_list):
+    def check_collision(x, y, th, wall_list, collision_flag):
       robot_center = Point(x, y).buffer(1)
       robot_shape = shapely.affinity.scale(robot_center, radius_robot, radius_robot)
       traveled_line = LineString([(x, y), (self.position[X], self.position[Y])])
@@ -184,9 +184,10 @@ class Robot():
       for wall in wall_list:
         line_wall = LineString([wall[0], wall[1]])
         if robot_shape.intersects(line_wall) or traveled_line.intersects(line_wall):
+          collision_flag = True
           # If the robot intersects with more than one wall, it's in a corner and should stay there
           if len(wall_conflict) > 0:
-            return self.position[X], self.position[Y], th
+            return (self.position[X], self.position[Y], th), collision_flag
           new = [x, y, th]
           velocity_vector = np.subtract(new, self.position)
           wall_vector = np.subtract(wall[0], wall[1])
@@ -223,9 +224,9 @@ class Robot():
               x = intersection_point[X] - velocity_vector[X]
               y = intersection_point[Y] - velocity_vector[Y]
           wall_conflict.append(wall)
-      return x, y, th
+      return (x, y, th), collision_flag
 
-    new_position = check_collision(new_position[X], new_position[Y], new_position[TH], wall_list)
+    new_position, coll_flag = check_collision(new_position[X], new_position[Y], new_position[TH], wall_list, coll_flag)
 
     self.position = deepcopy(new_position)
     return coll_flag
