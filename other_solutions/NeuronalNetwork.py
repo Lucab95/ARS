@@ -16,7 +16,6 @@ class Neural_Network(object):
     self.bias2 = 1
     self.extraoutput_backprop = 1
 
-
   #Forward propagation
   def forwardprop(self, x):
     x = np.concatenate((np.array([[self.bias1]]*len(x)), x), axis=1) #Adding the first bias (input)
@@ -24,7 +23,6 @@ class Neural_Network(object):
     self.hiddenLayer = np.concatenate((np.array([[self.bias2]]*len(self.hiddenLayer)), self.hiddenLayer), axis=1) #Adding the second bias (Hidden layer)
     output = self.sigmoid(np.dot(self.hiddenLayer, self.weights2))   #Output => HiddenLayerActivation x Weights2
     return output
-
 
   #Backward propagation
   def backprop(self, x, y, output, l_rate):
@@ -39,13 +37,11 @@ class Neural_Network(object):
     self.weights1 += l_rate*var_weights1
     self.weights2 += l_rate*var_weights2
 
-
   #Activation function - second parameter for derivate
   def sigmoid(self, x, derivate = False):
     if derivate == True:
         return x*(1-x)
     return 1/(1+np.exp(-x))
-
 
   #Training weights
   def train(self, x, y, n_epochs, l_rate=1):
@@ -62,7 +58,6 @@ class Neural_Network(object):
     plt.xlabel('Mean square error')
     plt.ylabel('Number epochs')
     plt.show()
-
 
   #Returns a prediction given an output
   def predict(self, x, showActivationAndWeights=False):    
@@ -83,12 +78,10 @@ class Neural_Network(object):
 
     return output
 
-
   #Saves the model in a txt file 
   def saveModel(self, name):
   	np.savetxt(("models\\"+name+"-w1.txt"), self.weights1, fmt="%s")
   	np.savetxt(("models\\"+name+"-w2.txt"), self.weights2, fmt="%s")
-
 
   #Load a model from a txt file
   def loadModel(self, name):
@@ -101,9 +94,6 @@ class Neural_Network(object):
   		exit(1)
   	self.weights1 = w1
   	self.weights2 = w2
-
-
-
 
 
 # # # # # # # # # # #
