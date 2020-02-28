@@ -78,13 +78,16 @@ def PlottingSegment(ax, Xa, Xb, Ya, Yb):  # segment from points A to B
 
 ###################### MAIN #########################
 
-GeneticEvolution = Ga(z_func,20
-                      )
+ga = Ga(z_func,20)
 # print(GeneticEvolution.calculate_fitness(0,5))
 x = np.linspace(LIM_m_x, LIM_M_x, 200)
 y = np.linspace(LIM_m_y, LIM_M_y, 200)
-starting_pop = GeneticEvolution.initialize_population(x,y)
+starting_pop = ga.initialize_population(x,y)
 
+weights=[]
+for i in range(5):
+    curr_vector = []
+ga.select_mating_pool()
 v, ax = PlotFunction(x, y, z_func)
 print(starting_pop)
 for i in range(len(starting_pop)):
