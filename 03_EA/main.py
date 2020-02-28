@@ -91,3 +91,16 @@ for i in range(len(starting_pop)):
     DrawMarker(ax,starting_pop[i][0], starting_pop[i][1],"0",False)
 # NeuralNetwork = ANN(0,0,1)
 v.show()
+
+# TODO INIT VARIABLES
+
+# TODO CREATE FIRST 50 PEOPLE (MATRIX OF MATRIX OF WEIGHTS)
+
+# TODO CICLE FOR:
+    # TODO LAUNCH ANN FOR EVERY WEIGHTS
+
+    # TODO TAKE THEOUTPUTS AND SAVE THE ZEDS
+
+    # TODO CHECK WHICH IS BEST N PEOPLE
+
+    # TODO LETS MAKE FUCK THESE BEST PEOPLE AND CREATE ANOTHER 50 KIDS
