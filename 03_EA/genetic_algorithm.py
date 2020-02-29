@@ -63,6 +63,5 @@ class GeneticAlgorithm:
 
         return offspring_crossover
 
-
     def calculate_fitness(self, x, y):
         return self.fitness_fuction(x,y)
