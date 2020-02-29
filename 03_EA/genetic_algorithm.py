@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-class Ga:
+class GeneticAlgorithm:
     def __init__(self, function_name, pop_size =50, crossover_prob = 0.45, crossover_prob_step = 0.3, mutation_prob = 0.05, mutation_prob_step = 0.01):
         self.pop_size= pop_size
         self.crossover_prob = crossover_prob

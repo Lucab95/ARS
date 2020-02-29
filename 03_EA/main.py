@@ -1,12 +1,11 @@
-
 # -*- coding: utf-8 -*-
-from ann import ANN
-from ga import Ga
+import artificial_neural_network as ann
+import genetic_algorithm as ga
 import numpy as np
 from math import pi, cos
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import random
+
 
 # Inputs
 
@@ -78,7 +77,8 @@ def PlottingSegment(ax, Xa, Xb, Ya, Yb):  # segment from points A to B
 
 ###################### MAIN #########################
 
-ga = Ga(z_func,20)
+geneticAlgorithm = ga.GeneticAlgorithm(z_func,20)
+artificialNN = ann.ArtificialNeuralNetwork(2, 4, 2)
 # print(GeneticEvolution.calculate_fitness(0,5))
 x = np.linspace(LIM_m_x, LIM_M_x, 200)
 y = np.linspace(LIM_m_y, LIM_M_y, 200)
@@ -107,3 +107,11 @@ v.show()
     # TODO CHECK WHICH IS BEST N PEOPLE
 
     # TODO LETS MAKE FUCK THESE BEST PEOPLE AND CREATE ANOTHER 50 KIDS
+
+
+# errors.append([np.square(np.subtract(x, output)).mean(), i])
+# errors = np.array(errors)
+# plt.plot(errors[:, 1], errors[:, 0])
+# plt.xlabel('Mean square error')
+# plt.ylabel('Number epochs')
+# plt.show()
