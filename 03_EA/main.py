@@ -3,7 +3,7 @@ import artificial_neural_network as ann
 import genetic_algorithm as ga
 import plotting as plot
 import numpy as np
-from math import pi, cos
+from math import cos, pi
 from copy import deepcopy
 
 
@@ -36,7 +36,6 @@ INDIVIDUAL_STEPS = 5
 
 
 # ===  Calculating x,y Values  ===
-x, y = 0, 0
 LIM_m_x, LIM_M_x = -1, 1
 LIM_m_y, LIM_M_y = -1, 1
 if FITNESS_FUNCTION.__name__ == "Rosenbrock":
@@ -45,10 +44,13 @@ if FITNESS_FUNCTION.__name__ == "Rosenbrock":
 else:  # Rastrigin
     LIM_m_x, LIM_M_x = -5, 5
     LIM_m_y, LIM_M_y = -5, 5
+x_plot = np.linspace(LIM_m_x, LIM_M_x, 200)
+y_plot = np.linspace(LIM_m_y, LIM_M_y, 200)
 
 
 # ===  MAIN  ===
 Pi, Po, W = 0, 1, 2
+X, Y = 0, 1
 
 # INITS
 geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, POPULATION_SIZE, CROSSOVER_PROBABILITY, CROSSOVER_P_STEP, MUTATION_PROBABILITY, MUTATION_P_STEP)
@@ -60,11 +62,20 @@ artificialNN = ann.ArtificialNeuralNetwork(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE
 dataset = []
 # inputs
 inputs = [
-    [1,0],
-    [0,1],
-    [-1,0],
-    [0,-1],
+    [3, 0],
+    [0, 3],
+    [-3, 0],
+    [0, -3],
 ]
+
+def PlottingResults(values):
+    v, ax = plot.PlotFunction(x_plot, y_plot, FITNESS_FUNCTION)
+    for dot in values:
+        plot.DrawMarker(ax, dot[X], dot[Y], "", False)
+    v.show()
+
+PlottingResults(inputs)
+
 # outputs
 outputs = []
 # weights
@@ -79,15 +90,31 @@ copied_dataset = deepcopy(dataset)
 for i in range(POPULATION_SIZE):
     inputs = copied_dataset[i][Pi]
     outputs = []
+    w0 = copied_dataset[i][W][0]
+    w1 = copied_dataset[i][W][1]
     for input in inputs:
+        artificialNN.weights_1L = w0
+        artificialNN.weights_2L = w1
         out = artificialNN.forward_propagation(input)
         out = artificialNN.mapping_output(out, [[LIM_m_x, LIM_M_x], [LIM_m_y, LIM_M_y]])
         outputs.append(out)
     copied_dataset[i][Po] = outputs
 
+# check fitness
+minimum = 99999999999999999999
+index = 0
+for i in range(POPULATION_SIZE):
+    new_value = geneticAlgorithm.calculate_fitness(copied_dataset[i][Po])
+    if new_value < minimum:
+        index = i
+        minimum = new_value
 
-x = np.linspace(LIM_m_x, LIM_M_x, 200)
-y = np.linspace(LIM_m_y, LIM_M_y, 200)
+
+
+# plot the first best result (BEST FITNESS FUNCTION)
+PlottingResults(copied_dataset[index][Po])
+
+#TODO from now the copied_dataset has Poutputs and random weights
 
 #starting_pop = ga.initialize_population(x, y)
 
@@ -102,27 +129,13 @@ y = np.linspace(LIM_m_y, LIM_M_y, 200)
 ## NeuralNetwork = ANN(0,0,1)
 #v.show()
 
-# TODO INIT VARIABLES
-
-# TODO CREATE FIRST 50 PEOPLE (MATRIX OF MATRIX OF WEIGHTS)
-
 # TODO CICLE FOR:
+
     # TODO LAUNCH ANN FOR EVERY WEIGHTS
 
     # TODO TAKE THEOUTPUTS AND SAVE THE ZEDS
 
     # TODO CHECK WHICH IS BEST N PEOPLE
 
-    # TODO LETS MAKE FUCK THESE BEST PEOPLE AND CREATE ANOTHER 50 KIDS
+    #
 
-
-#dataset = np.array(
-#    [
-#     [1, 0, 0, 0, 0, 0],
-#     [0, 1, 0, 0, 0, 0],
-#     [0, 0, 1, 0, 0, 0],
-#     [0, 0, 0, 1, 0, 0],
-#     [0, 0, 0, 0, 1, 0],
-#     [0, 0, 0, 0, 0, 1]
-#    ]
-#)
