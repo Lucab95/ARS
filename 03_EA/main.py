@@ -49,7 +49,7 @@ y_plot = np.linspace(LIM_m_y, LIM_M_y, 200)
 
 
 # ===  MAIN  ===
-Pi, Po, W = 0, 1, 2
+Pi, Po, W, Z = 0, 1, 2, 3
 X, Y = 0, 1
 
 # INITS
@@ -57,7 +57,7 @@ geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, POPULATION_SIZE, CROSSO
 artificialNN = ann.ArtificialNeuralNetwork(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
 
 # Creation dataset
-# a vector with [[Pi],[Po],[W0, W1]]
+# a vector with [[Pi],[Po],[W0, W1][Z]]
 # Pi = [[x0,y0],..,[xn,yn]] and so is Po
 dataset = []
 # inputs
@@ -67,6 +67,8 @@ inputs = [
     [-3, 0],
     [0, -3],
 ]
+
+fitness = 10000000.
 
 def PlottingResults(values):
     v, ax = plot.PlotFunction(x_plot, y_plot, FITNESS_FUNCTION)
@@ -82,7 +84,7 @@ outputs = []
 for i in range(POPULATION_SIZE):
     W1 = np.random.randn(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE)
     W2 = np.random.randn(ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
-    new_element = [inputs, outputs, [W1, W2]]
+    new_element = [inputs, outputs, [W1, W2], fitness]
     dataset.append(new_element)
 
 
@@ -99,20 +101,15 @@ for i in range(POPULATION_SIZE):
         out = artificialNN.mapping_output(out, [[LIM_m_x, LIM_M_x], [LIM_m_y, LIM_M_y]])
         outputs.append(out)
     copied_dataset[i][Po] = outputs
-
-# check fitness
-minimum = 99999999999999999999
-index = 0
-for i in range(POPULATION_SIZE):
-    new_value = geneticAlgorithm.calculate_fitness(copied_dataset[i][Po])
-    if new_value < minimum:
-        index = i
-        minimum = new_value
+    copied_dataset[i][Z] = geneticAlgorithm.calculate_fitness(outputs)
 
 
+sorted_dataset = sorted(copied_dataset, key=lambda output: output[Z])
 
-# plot the first best result (BEST FITNESS FUNCTION)
-PlottingResults(copied_dataset[index][Po])
+PlottingResults(sorted_dataset[0][Po])
+#PlottingResults(sorted_dataset[-1][Po])
+
+parent_list = sorted_dataset[0:POPULATION_SAVED]
 
 #TODO from now the copied_dataset has Poutputs and random weights
 
@@ -136,6 +133,3 @@ PlottingResults(copied_dataset[index][Po])
     # TODO TAKE THEOUTPUTS AND SAVE THE ZEDS
 
     # TODO CHECK WHICH IS BEST N PEOPLE
-
-    #
-
