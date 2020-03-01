@@ -4,6 +4,7 @@ import genetic_algorithm as ga
 import plotting as plot
 import numpy as np
 from math import pi, cos
+from copy import deepcopy
 
 
 # ===  Defining Benchmark Functions  ===
@@ -15,10 +16,23 @@ def Rastrigin(x, y):
 
 
 # ===  INPUTS  ===
-POPULATION_SIZE = 5
+# == ANN ==
+ANN_INPUT_SIZE = 2
+ANN_HIDDEN_LAYER_SIZE = 4
+ANN_OUTPUT_SIZE = 2
+
+# == GA ==
+FITNESS_FUNCTION = Rastrigin  # Rosenbrock
+POPULATION_SIZE = 50
+POPULATION_SAVED = 25
+CROSSOVER_PROBABILITY = 0.45
+CROSSOVER_P_STEP = 0.3
+MUTATION_PROBABILITY = 0.05
+MUTATION_P_STEP = 0.01
+
+
 GENETIC_EPOCHS = 50
 INDIVIDUAL_STEPS = 5
-FITNESS_FUNCTION = Rastrigin  # Rosenbrock
 
 
 # ===  Calculating x,y Values  ===
@@ -34,24 +48,59 @@ else:  # Rastrigin
 
 
 # ===  MAIN  ===
+Pi, Po, W = 0, 1, 2
 
-geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, 20)
-artificialNN = ann.ArtificialNeuralNetwork(2, 4, 2)
-# print(GeneticEvolution.calculate_fitness(0,5))
+# INITS
+geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, POPULATION_SIZE, CROSSOVER_PROBABILITY, CROSSOVER_P_STEP, MUTATION_PROBABILITY, MUTATION_P_STEP)
+artificialNN = ann.ArtificialNeuralNetwork(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
+
+# Creation dataset
+# a vector with [[Pi],[Po],[W0, W1]]
+# Pi = [[x0,y0],..,[xn,yn]] and so is Po
+dataset = []
+# inputs
+inputs = [
+    [1,0],
+    [0,1],
+    [-1,0],
+    [0,-1],
+]
+# outputs
+outputs = []
+# weights
+for i in range(POPULATION_SIZE):
+    W1 = np.random.randn(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE)
+    W2 = np.random.randn(ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
+    new_element = [inputs, outputs, [W1, W2]]
+    dataset.append(new_element)
+
+
+copied_dataset = deepcopy(dataset)
+for i in range(POPULATION_SIZE):
+    inputs = copied_dataset[i][Pi]
+    outputs = []
+    for input in inputs:
+        out = artificialNN.forward_propagation(input)
+        out = artificialNN.mapping_output(out, [[LIM_m_x, LIM_M_x], [LIM_m_y, LIM_M_y]])
+        outputs.append(out)
+    copied_dataset[i][Po] = outputs
+
+
 x = np.linspace(LIM_m_x, LIM_M_x, 200)
 y = np.linspace(LIM_m_y, LIM_M_y, 200)
-starting_pop = ga.initialize_population(x,y)
 
-weights=[]
-for i in range(5):
-    curr_vector = []
-ga.select_mating_pool()
-v, ax = plot.PlotFunction(x, y, FITNESS_FUNCTION)
-print(starting_pop)
-for i in range(len(starting_pop)):
-    plot.DrawMarker(ax,starting_pop[i][0], starting_pop[i][1],"0",False)
-# NeuralNetwork = ANN(0,0,1)
-v.show()
+#starting_pop = ga.initialize_population(x, y)
+
+#weights = []
+#for i in range(5):
+#    curr_vector = []
+#ga.select_mating_pool()
+#v, ax = plot.PlotFunction(x, y, FITNESS_FUNCTION)
+#print(starting_pop)
+#for i in range(len(starting_pop)):
+#    plot.DrawMarker(ax,starting_pop[i][0], starting_pop[i][1],"0",False)
+## NeuralNetwork = ANN(0,0,1)
+#v.show()
 
 # TODO INIT VARIABLES
 
@@ -65,3 +114,15 @@ v.show()
     # TODO CHECK WHICH IS BEST N PEOPLE
 
     # TODO LETS MAKE FUCK THESE BEST PEOPLE AND CREATE ANOTHER 50 KIDS
+
+
+#dataset = np.array(
+#    [
+#     [1, 0, 0, 0, 0, 0],
+#     [0, 1, 0, 0, 0, 0],
+#     [0, 0, 1, 0, 0, 0],
+#     [0, 0, 0, 1, 0, 0],
+#     [0, 0, 0, 0, 1, 0],
+#     [0, 0, 0, 0, 0, 1]
+#    ]
+#)
