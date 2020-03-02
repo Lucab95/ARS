@@ -45,16 +45,9 @@ class GeneticAlgorithm:
     def mutation_function(self, offspring):
         for ofspr in offspring:
             if random.random() <= self.mutation_prob:
-                if random.random() < 0.5:
-                    ofspr[0] = ofspr[0] + random.random()*self.mutation_prob_step
-                else:
-                    ofspr[0] = ofspr[0] - random.random()*self.mutation_prob_step
-
+                ofspr[0] += np.random.uniform(-self.mutation_prob_step, self.mutation_prob_step)
             if random.random() <= self.mutation_prob:
-                if random.random() < 0.5:
-                    ofspr[1] = ofspr[1] + random.random()*self.mutation_prob_step
-                else:
-                    ofspr[1] = ofspr[1] - random.random()*self.mutation_prob_step
+                ofspr[1] += np.random.uniform(-self.mutation_prob_step, self.mutation_prob_step)
         return offspring
 
     def calculate_fitness(self, outputs):
