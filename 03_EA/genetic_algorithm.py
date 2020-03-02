@@ -11,7 +11,7 @@ class GeneticAlgorithm:
         self.mutation_prob_step = mutation_prob_step
         self.fitness_function = function_name
 
-    def initialize_population(self, x, y):
+    def initialize_population(self, x, y): #truncated rank-based selection
         population = []
         for i in range(self.pop_size):
             population.append(np.array([random.choice(x), random.choice(y)]))
@@ -23,7 +23,8 @@ class GeneticAlgorithm:
             rank_list[i] = (self.fitness_function(parent[0], parent[1]))
         rank_list =np.sort(rank_list)
         reversed = rank_list[::-1]
-        return reversed
+        print(reversed)
+        return reversed[0:no_parents]
 
 
 
@@ -34,34 +35,40 @@ class GeneticAlgorithm:
         return stats.mean(rank_list), stats.stdev(rank_list), rank_list
 
     def crossover_function(self, parents, offspring_size):
-        offspring = np.empty(offspring_size)
+        offspring = []
 
-        for son in offspring_size:
-            w1 = parents[son][2][0]
-            print(w1.shape)
-            middle = parents[son % w1.shape[1]];
-
-    def crossover_function(self, parents, offspring_size):
-
-        offspring = np.empty(offspring_size)
-
-        # The point at which crossover takes place between two parents. Usually, it is at the center.
-
-        crossover_point = np.uint32(offspring_size[1] / 2)
-
-        for k in range(offspring_size[0]):
-            # Index of the first parent to mate.
-            parent1_idx = k % parents.shape[0]
-
-            # Index of the second parent to mate.
-            parent2_idx = (k + 1) % parents.shape[0]
-
-            # The new offspring will have its first half of its genes taken from the first parent.
-            offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point]
-
-            # The new offspring will have its second half of its genes taken from the second parent.
-            offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
+        for i, son in offspring_size:
+            parent_index = i % len(parents)
+            parent_index2= i+1 % len(parents)
+            print(len(parents))
+            offspring_x = parents[parent_index][0] + parents[parent_index2][0]
+            offspring_y = parents[parent_index][1] + parents[parent_index2][1]
+            offspring.append([offspring_x,offspring_y])
         return offspring
+
+    
+    #
+    # def crossover_function(self, parents, offspring_size):
+    #
+    #     offspring = np.empty(offspring_size)
+    #
+    #     # The point at which crossover takes place between two parents. Usually, it is at the center.
+    #
+    #     crossover_point = np.uint32(offspring_size[1] / 2)
+    #
+    #     for k in range(offspring_size[0]):
+    #         # Index of the first parent to mate.
+    #         parent1_idx = k % parents.shape[0]
+    #
+    #         # Index of the second parent to mate.
+    #         parent2_idx = (k + 1) % parents.shape[0]
+    #
+    #         # The new offspring will have its first half of its genes taken from the first parent.
+    #         offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point]
+    #
+    #         # The new offspring will have its second half of its genes taken from the second parent.
+    #         offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
+    #     return offspring
 
     def mutation_function(self, offspring_crossover, mutation_percent):
 
