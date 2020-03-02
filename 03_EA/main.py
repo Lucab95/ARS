@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import artificial_neural_network as ann
 import genetic_algorithm as ga
 import plotting as plot
 import numpy as np
 from math import cos, pi
 from copy import deepcopy
-
+import random
 
 # ===  Defining Benchmark Functions  ===
 def Rosenbrock(x, y):  # MIN 0
@@ -15,14 +14,9 @@ def Rastrigin(x, y):  # MIN 0
     return 10 * 2 + (x ** 2 - 10 * cos(2 * pi * x)) + (y ** 2 - 10 * cos(2 * pi * y))
 
 # ===  INPUTS  ===
-# == ANN ==
-ANN_INPUT_SIZE = 2
-ANN_HIDDEN_LAYER_SIZE = 4
-ANN_OUTPUT_SIZE = 2
 
-# == GA ==
 FITNESS_FUNCTION = Rastrigin  # Rosenbrock
-POPULATION_SIZE = 50
+POPULATION_SIZE = 20
 POPULATION_SAVED = 25
 CROSSOVER_PROBABILITY = 0.45
 CROSSOVER_P_STEP = 0.3
@@ -48,25 +42,24 @@ y_plot = np.linspace(LIM_m_y, LIM_M_y, 200)
 
 
 # ===  MAIN  ===
-Pi, Po, W, Z = 0, 1, 2, 3
+Pi, Po, Z = 0, 1, 2
 X, Y = 0, 1
 
 # INITS
 geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, CROSSOVER_PROBABILITY, CROSSOVER_P_STEP, MUTATION_PROBABILITY, MUTATION_P_STEP)
-artificialNN = ann.ArtificialNeuralNetwork(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
 FF_results = [[], []]
 
 # Creation dataset
-# a vector with [[Pi],[Po],[W0, W1][Z]]
-# Pi = [[x0,y0],..,[xn,yn]] and so is Po
+# a vector with [[Pi],[Z]]
+# Pi = [[x0,y0],..,[xn,yn]]
+
+# INIT DATASET
 dataset = []
-# inputs
-inputs = [
-    [3, 0],
-    [0, 3],
-    [-3, 0],
-    [0, -3],
-]
+for i in range(POPULATION_SIZE):
+    x = random.choice(x_plot)
+    y = random.choice(y_plot)
+
+    dataset.append([np.array([random.choice(x_plot), random.choice(y_plot)]), []])
 
 fitness = 10000000.
 
@@ -76,20 +69,10 @@ def PlottingResults(values):
         plot.DrawMarker(ax, dot[X], dot[Y], "", False)
     v.show()
 
-PlottingResults(inputs)
-
-# outputs
-outputs = []
-# weights
-for i in range(POPULATION_SIZE):
-    W1 = np.random.randn(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE)
-    W2 = np.random.randn(ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
-    new_element = [inputs, outputs, [W1, W2], fitness]
-    dataset.append(new_element)
-
+PlottingResults(dataset)
 
 copied_dataset = deepcopy(dataset)
-for i in range(POPULATION_SIZE):
+for i in range(len(POPULATION_SIZE):
     inputs = copied_dataset[i][Pi]
     outputs = []
     w0 = copied_dataset[i][W][0]
@@ -119,9 +102,6 @@ parent_list = sorted_dataset[0 : POPULATION_SAVED]
 #children_list = geneticAlgorithm.crossover_function(parent_list, POPULATION_SIZE - POPULATION_SAVED)
 #copied_dataset = parent_list + children_list
 
-
-
-
 plot.PlottingPerformance(FF_results)
 
 #weights = []
@@ -135,10 +115,3 @@ plot.PlottingPerformance(FF_results)
 ## NeuralNetwork = ANN(0,0,1)
 #v.show()
 
-# TODO CICLE FOR:
-
-    # TODO LAUNCH ANN FOR EVERY WEIGHTS
-
-    # TODO TAKE THEOUTPUTS AND SAVE THE ZEDS
-
-    # TODO CHECK WHICH IS BEST N PEOPLE

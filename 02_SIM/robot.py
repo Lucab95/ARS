@@ -176,18 +176,36 @@ class Robot():
     new_position = self._ForwardKinematics(self.position[X], self.position[Y], self.position[TH], dT)
 
     # Collision detection
-    def check_collision(x, y, th, wall_list, collision_flag):
+    def check_collision(new_pos, wall_list, collision_flag):
+      x, y, th = new_pos
+      # create geometry of robot and path
       robot_center = Point(x, y).buffer(1)
       robot_shape = shapely.affinity.scale(robot_center, radius_robot, radius_robot)
       traveled_line = LineString([(x, y), (self.position[X], self.position[Y])])
+
       wall_conflict = []
       for wall in wall_list:
         line_wall = LineString([wall[0], wall[1]])
         if robot_shape.intersects(line_wall) or traveled_line.intersects(line_wall):
+          #asd = robot_shape.intersection(line_wall)
+          #print(asd)
+          wall_conflict.append(wall)
           collision_flag = True
-          # If the robot intersects with more than one wall, it's in a corner and should stay there
-          if len(wall_conflict) > 0:
+
+          if len(wall_conflict) >= 2:
+            # If the robot intersects with more than one wall, it's in a corner and should stay there
+            # OR is in a convex corner and try to figure out
+          #  def common_member(a, b):
+          #    a_set = set(a)
+          #    b_set = set(b)
+          #    if (a_set & b_set):
+          #      return True
+          #    else:
+          #      return False
+          #  spam = deepcopy(wall_conflict)
+
             return (self.position[X], self.position[Y], th), collision_flag
+
           new = [x, y, th]
           velocity_vector = np.subtract(new, self.position)
           wall_vector = np.subtract(wall[0], wall[1])
@@ -200,8 +218,7 @@ class Robot():
             new = np.add(self.position, new_vel)
             x = new[X]
             y = new[Y]
-          # If they are orthogonal, put the robot as close as possible to the wall
-          else:
+          else: # If they are orthogonal, put the robot as close as possible to the wall
             intersection_point = (0, 0)
             if robot_shape.intersects(line_wall):
               intersect_line = robot_shape.intersection(line_wall)
@@ -223,10 +240,10 @@ class Robot():
               velocity_vector = radius_robot * (velocity_vector / np.linalg.norm(velocity_vector))
               x = intersection_point[X] - velocity_vector[X]
               y = intersection_point[Y] - velocity_vector[Y]
-          wall_conflict.append(wall)
+
       return (x, y, th), collision_flag
 
-    new_position, coll_flag = check_collision(new_position[X], new_position[Y], new_position[TH], wall_list, coll_flag)
+    new_position, coll_flag = check_collision(new_position, wall_list, coll_flag)
 
     self.position = deepcopy(new_position)
     return coll_flag
