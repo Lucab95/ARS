@@ -84,7 +84,7 @@ for i in range(len(POPULATION_SIZE):
         out = artificialNN.mapping_output(out, [[LIM_m_x, LIM_M_x], [LIM_m_y, LIM_M_y]])
         outputs.append(out)
     copied_dataset[i][Po] = outputs
-    media, stdev = geneticAlgorithm.calculate_fitness(outputs)
+    media, stdev, rank_list_unord = geneticAlgorithm.calculate_fitness(outputs)
     copied_dataset[i][Z] = media
     FF_results[0].append(media)
     FF_results[1].append(stdev)

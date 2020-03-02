@@ -11,11 +11,35 @@ class GeneticAlgorithm:
         self.mutation_prob_step = mutation_prob_step
         self.fitness_function = function_name
 
+    def initialize_population(self, x, y):
+        population = []
+        for i in range(self.pop_size):
+            population.append(np.array([random.choice(x), random.choice(y)]))
+        return np.array(population)
+
+    def select_parents(self, parents, no_parents):
+        rank_list = np.empty(no_parents)
+        for i, parent in parents:
+            rank_list[i] = (self.fitness_function(parent[0], parent[1]))
+        rank_list =np.sort(rank_list)
+        reversed = rank_list[::-1]
+        return reversed
+
+
+
     def calculate_fitness(self, outputs):
         rank_list = []
         for out in outputs:
             rank_list.append(self.fitness_function(out[0], out[1]))
-        return stats.mean(rank_list), stats.stdev(rank_list)
+        return stats.mean(rank_list), stats.stdev(rank_list), rank_list
+
+    def crossover_function(self, parents, offspring_size):
+        offspring = np.empty(offspring_size)
+
+        for son in offspring_size:
+            w1 = parents[son][2][0]
+            print(w1.shape)
+            middle = parents[son % w1.shape[1]];
 
     def crossover_function(self, parents, offspring_size):
 
@@ -37,7 +61,6 @@ class GeneticAlgorithm:
 
             # The new offspring will have its second half of its genes taken from the second parent.
             offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
-
         return offspring
 
     def mutation_function(self, offspring_crossover, mutation_percent):
@@ -53,3 +76,6 @@ class GeneticAlgorithm:
             offspring_crossover[idx, mutation_indices] = offspring_crossover[idx, mutation_indices] + random_value
 
         return offspring_crossover
+
+
+
