@@ -20,8 +20,9 @@ POPULATION_SIZE = 60
 PARENTS_NUMBER = POPULATION_SIZE / 5
 CROSSOVER_PROBABILITY = 0.45
 CROSSOVER_P_STEP = 0.3
-MUTATION_PROBABILITY = 0.05
+MUTATION_PROBABILITY = 0.03
 MUTATION_P_STEP = 0.01
+MANTAIN_PARENTS=True
 
 
 GENETIC_EPOCHS = 50
@@ -55,8 +56,16 @@ plot.PlottingResults(dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
 
 copied_dataset = deepcopy(dataset)
 for i in range(GENETIC_EPOCHS):
-    copied_dataset = geneticAlgorithm.select_parents(copied_dataset, PARENTS_NUMBER)
-    copied_dataset = geneticAlgorithm.crossover_function(copied_dataset, POPULATION_SIZE - PARENTS_NUMBER)
+    parents = geneticAlgorithm.select_parents(copied_dataset, PARENTS_NUMBER)
+    copied_dataset = geneticAlgorithm.crossover_function(parents, POPULATION_SIZE, MANTAIN_PARENTS)
+    copied_dataset = geneticAlgorithm.mutation_function(copied_dataset)
+    if MANTAIN_PARENTS:
+        all_individuals= np.empty(POPULATION_SIZE)
+        all_individuals[0:PARENTS_NUMBER] = parents
+        all_individuals[PARENTS_NUMBER:] = copied_dataset
+        copied_dataset = deepcopy(all_individuals)
+    print(copied_dataset)
+
 
 #copied_dataset = deepcopy(dataset)
 #for i in range(len(POPULATION_SIZE):
