@@ -4,7 +4,6 @@ import statistics as stats
 
 X, Y, Z = 0, 1, 2
 
-
 class GeneticAlgorithm:
 
     def __init__(self, function_name, mutation_prob, mutation_prob_step):
@@ -24,19 +23,6 @@ class GeneticAlgorithm:
     def select_parents(self, parent_array, no_parents):  # truncated rank-based selection
         sorted_dataset = sorted(parent_array, key=lambda output: output[Z])
         return sorted_dataset[0:no_parents]
-
-    # def crossover_function(self, parent_array, offspring_size):
-    #     offspring = []
-    #     parent_size = len(parent_array)
-    #     for i in range(offspring_size):
-    #         parent_index = i % parent_size
-    #         parent_index2 = i + 1 % parent_size
-    #
-    #         offspring_x = 0.5 * parent_array[parent_index][X] + parent_array[parent_index2][X]
-    #         offspring_y = 0.5 * parent_array[parent_index][Y] + parent_array[parent_index2][Y]
-    #         offspring_z = self.fitness_function(offspring_x, offspring_y)
-    #         offspring.append([offspring_x, offspring_y, offspring_z])
-    #     return offspring
 
     def crossover_function(self, parent_array, pop_size, mantain):
         offspring = []
@@ -69,42 +55,11 @@ class GeneticAlgorithm:
                     ofspr[1] = ofspr[1] + random.random()*self.mutation_prob_step
                 else:
                     ofspr[1] = ofspr[1] - random.random()*self.mutation_prob_step
-        # num_mutations = np.uint32(  (self.mutation_prob * offspring_crossover)
-        # # Mutation changes a single gene in each offspring randomly.
-        #
-        # for idx in range(offspring_crossover.shape[0]):
-        #     # The random value to be added to the gene.
-        #     random_value = np.random.uniform(-1.0, 1.0, 1)
-        #     offspring_crossover[idx, mutation_indices] = offspring_crossover[idx, mutation_indices] + random_value
-
         return offspring
 
-    #
     def calculate_fitness(self, outputs):
         sorted_outputs = sorted(outputs, key=lambda output: output[Z])
         rank_list = []
         for out in sorted_outputs:
             rank_list.append(out[Z])
         return rank_list[0], stats.mean(rank_list), stats.stdev(rank_list)
-
-    # def crossover_function(self, parents, offspring_size):
-    #
-    #     offspring = np.empty(offspring_size)
-    #
-    #     # The point at which crossover takes place between two parents. Usually, it is at the center.
-    #
-    #     crossover_point = np.uint32(offspring_size[1] / 2)
-    #
-    #     for k in range(offspring_size[0]):
-    #         # Index of the first parent to mate.
-    #         parent1_idx = k % parents.shape[0]
-    #
-    #         # Index of the second parent to mate.
-    #         parent2_idx = (k + 1) % parents.shape[0]
-    #
-    #         # The new offspring will have its first half of its genes taken from the first parent.
-    #         offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point]
-    #
-    #         # The new offspring will have its second half of its genes taken from the second parent.
-    #         offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
-    #     return offspring

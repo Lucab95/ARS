@@ -4,17 +4,17 @@ import plotting as plot
 import numpy as np
 from math import cos, pi
 from copy import deepcopy
-import random
 
 # ===  Defining Benchmark Functions  ===
 def Rosenbrock(x, y):  # MIN 0
     a, b = 0, 100;
     return (a - x) ** 2 + b * (y - x ** 2) ** 2
+
 def Rastrigin(x, y):  # MIN 0
     return 10 * 2 + (x ** 2 - 10 * cos(2 * pi * x)) + (y ** 2 - 10 * cos(2 * pi * y))
 
-# ===  INPUTS  ===
 
+# ===  INPUTS  ===
 FITNESS_FUNCTION = Rastrigin  # Rosenbrock
 POPULATION_SIZE = 60
 PARENTS_NUMBER = int(POPULATION_SIZE / 4)
@@ -63,7 +63,6 @@ for i in range(1, GENETIC_EPOCHS + 1):
     copied_dataset = geneticAlgorithm.mutation_function(copied_dataset)
     if MANTAIN_PARENTS:
         all_individuals= parents + copied_dataset
-        #all_individuals[PARENTS_NUMBER:] = copied_dataset
         copied_dataset = deepcopy(all_individuals)
     print(copied_dataset)
 
@@ -72,7 +71,7 @@ for i in range(1, GENETIC_EPOCHS + 1):
     FF_results[1].append(media)
     FF_results[2].append(stdev)
     if i % 10 == 0:
-        print(i)
-        #plot.PlottingResults(copied_dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
-plot.PlottingResults(copied_dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
+        plot.PlottingResults(copied_dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
+
+#plot.PlottingResults(copied_dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
 plot.PlottingPerformance(FF_results)

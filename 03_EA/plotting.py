@@ -2,10 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-
-# == Plotting iterations ==
-
-
 def GetPlottingMatrices(x, y, func):
     X, Y = np.meshgrid(x, y)
     z = np.zeros(shape=(X.shape))
@@ -41,9 +37,7 @@ def PlottingResults(values, x_list, y_list, function):
     v.show()
 
 def PlottingPerformance(Z_list):
-    best  = Z_list[0]
-    mean  = Z_list[1]
-    stdev = Z_list[2]
+    best, mean, stdev = Z_list[0], Z_list[1], Z_list[2]
 
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111)
@@ -79,8 +73,3 @@ def PlottingPerformance(Z_list):
     ax.grid(color='lightgrey', linestyle='-')
     ax.set_facecolor('w')
     plt.show()
-
-
-# errors.append([np.square(np.subtract(x, output)).mean(), i])
-# errors = np.array(errors)
-# plt.plot(errors[:, 1], errors[:, 0])
