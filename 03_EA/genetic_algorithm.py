@@ -7,12 +7,10 @@ X, Y, Z = 0, 1, 2
 
 class GeneticAlgorithm:
 
-    def __init__(self, function_name, crossover_prob, crossover_prob_step, mutation_prob, mutation_prob_step):
-        self.crossover_prob = crossover_prob
-        self.crossover_prob_step = crossover_prob_step
+    def __init__(self, function_name, mutation_prob, mutation_prob_step):
+        self.fitness_function = function_name
         self.mutation_prob = mutation_prob
         self.mutation_prob_step = mutation_prob_step
-        self.fitness_function = function_name
 
     def initialize_population(self, pop_size, x_range, y_range):
         population = []
@@ -26,12 +24,6 @@ class GeneticAlgorithm:
     def select_parents(self, parent_array, no_parents):  # truncated rank-based selection
         sorted_dataset = sorted(parent_array, key=lambda output: output[Z])
         return sorted_dataset[0:no_parents]
-
-    def calculate_fitness(self, outputs):
-        rank_list = []
-        for out in outputs:
-            rank_list.append(self.fitness_function(out[0], out[1]))
-        return stats.mean(rank_list), stats.stdev(rank_list), rank_list
 
     # def crossover_function(self, parent_array, offspring_size):
     #     offspring = []
@@ -65,11 +57,18 @@ class GeneticAlgorithm:
         return offspring
 
     def mutation_function(self, offspring):
-        if random.random() <= self.mutation_prob:
-            if random.random() <0.5:
-                offspring[0] += self.mutation_prob_step
-            else:
-                offspring[0] -= self.mutation_prob_step
+        for ofspr in offspring:
+            if random.random() <= self.mutation_prob:
+                if random.random() < 0.5:
+                    ofspr[0] = ofspr[0] + random.random()*self.mutation_prob_step
+                else:
+                    ofspr[0] = ofspr[0] - random.random()*self.mutation_prob_step
+
+            if random.random() <= self.mutation_prob:
+                if random.random() < 0.5:
+                    ofspr[1] = ofspr[1] + random.random()*self.mutation_prob_step
+                else:
+                    ofspr[1] = ofspr[1] - random.random()*self.mutation_prob_step
         # num_mutations = np.uint32(  (self.mutation_prob * offspring_crossover)
         # # Mutation changes a single gene in each offspring randomly.
         #
@@ -81,6 +80,13 @@ class GeneticAlgorithm:
         return offspring
 
     #
+    def calculate_fitness(self, outputs):
+        sorted_outputs = sorted(outputs, key=lambda output: output[Z])
+        rank_list = []
+        for out in sorted_outputs:
+            rank_list.append(out[Z])
+        return rank_list[0], stats.mean(rank_list), stats.stdev(rank_list)
+
     # def crossover_function(self, parents, offspring_size):
     #
     #     offspring = np.empty(offspring_size)
