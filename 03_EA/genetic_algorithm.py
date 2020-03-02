@@ -1,32 +1,23 @@
 import numpy as np
 import random
+import statistics as stats
 
 class GeneticAlgorithm:
-    def __init__(self, function_name, pop_size, crossover_prob = 0.45, crossover_prob_step = 0.3, mutation_prob = 0.05, mutation_prob_step = 0.01):
-        self.pop_size= pop_size
+
+    def __init__(self, function_name, crossover_prob, crossover_prob_step, mutation_prob, mutation_prob_step):
         self.crossover_prob = crossover_prob
         self.crossover_prob_step = crossover_prob_step
         self.mutation_prob = mutation_prob
         self.mutation_prob_step = mutation_prob_step
-        self.fitness_fuction= function_name
+        self.fitness_function = function_name
 
-    def initialize_population(self, x, y):
-        population = []
-        for i in range(self.pop_size):
-            population.append(np.array([random.choice(x), random.choice(y)]))
-        return np.array(population)
+    def calculate_fitness(self, outputs):
+        rank_list = []
+        for out in outputs:
+            rank_list.append(self.fitness_function(out[0], out[1]))
+        return stats.mean(rank_list), stats.stdev(rank_list)
 
-    #Select the best parents for breeding
-    def select_mating_pool(self, weights, fitness, no_parents):
-        parents = np.empty((no_parents, weights.shape[1]))
-        for parent in range(no_parents):
-            lowest_fitness = np.where(fitness == np.min(fitness))
-            lowest_fitness = lowest_fitness[0][0]
-            parents[parent, :] = weights[lowest_fitness, :] #TODO check it later
-            fitness[lowest_fitness] = -99999999999
-        return parents
-
-    def crossover(self, parents, offspring_size):
+    def crossover_function(self, parents, offspring_size):
 
         offspring = np.empty(offspring_size)
 
@@ -49,7 +40,7 @@ class GeneticAlgorithm:
 
         return offspring
 
-    def mutation(self, offspring_crossover, mutation_percent):
+    def mutation_function(self, offspring_crossover, mutation_percent):
 
         num_mutations = np.uint32((self.mutation_prob * offspring_crossover.shape[1]) / 100) #TODO too much probably
         mutation_indices = np.array(random.sample(range(0, offspring_crossover.shape[1]), num_mutations))
@@ -62,9 +53,3 @@ class GeneticAlgorithm:
             offspring_crossover[idx, mutation_indices] = offspring_crossover[idx, mutation_indices] + random_value
 
         return offspring_crossover
-
-    def calculate_fitness(self, outputs):
-        sum = 0
-        for out in outputs:
-            sum += self.fitness_fuction(out[0], out[1])
-        return sum / len(outputs)

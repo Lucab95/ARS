@@ -31,10 +31,14 @@ def DrawMarker(ax, x, y, value, is_final_mark):
 def PlottingSegment(ax, Xa, Xb, Ya, Yb):  # segment from points A to B
     ax.plot([Xa, Xb], [Ya, Yb], linewidth=1, color='black')
 
+def PlottingPerformance(Z_list):
+    asd = len(Z_list[0])
+    wer = Z_list[0]
+    plt.plot(range(len(Z_list[0])), Z_list[0])
+    plt.xlabel('Number epochs')
+    plt.ylabel('Means Fitness Function')
+    plt.show()
 
 # errors.append([np.square(np.subtract(x, output)).mean(), i])
 # errors = np.array(errors)
 # plt.plot(errors[:, 1], errors[:, 0])
-# plt.xlabel('Mean square error')
-# plt.ylabel('Number epochs')
-# plt.show()

@@ -8,12 +8,11 @@ from copy import deepcopy
 
 
 # ===  Defining Benchmark Functions  ===
-def Rosenbrock(x, y):
+def Rosenbrock(x, y):  # MIN 0
     a, b = 0, 100;
     return (a - x) ** 2 + b * (y - x ** 2) ** 2
-def Rastrigin(x, y):
+def Rastrigin(x, y):  # MIN 0
     return 10 * 2 + (x ** 2 - 10 * cos(2 * pi * x)) + (y ** 2 - 10 * cos(2 * pi * y))
-
 
 # ===  INPUTS  ===
 # == ANN ==
@@ -53,8 +52,9 @@ Pi, Po, W, Z = 0, 1, 2, 3
 X, Y = 0, 1
 
 # INITS
-geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, POPULATION_SIZE, CROSSOVER_PROBABILITY, CROSSOVER_P_STEP, MUTATION_PROBABILITY, MUTATION_P_STEP)
+geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, CROSSOVER_PROBABILITY, CROSSOVER_P_STEP, MUTATION_PROBABILITY, MUTATION_P_STEP)
 artificialNN = ann.ArtificialNeuralNetwork(ANN_INPUT_SIZE, ANN_HIDDEN_LAYER_SIZE, ANN_OUTPUT_SIZE)
+FF_results = [[], []]
 
 # Creation dataset
 # a vector with [[Pi],[Po],[W0, W1][Z]]
@@ -95,13 +95,16 @@ for i in range(POPULATION_SIZE):
     w0 = copied_dataset[i][W][0]
     w1 = copied_dataset[i][W][1]
     for input in inputs:
-        artificialNN.weights_1L = w0
-        artificialNN.weights_2L = w1
+        artificialNN.weights_0L = w0
+        artificialNN.weights_1L = w1
         out = artificialNN.forward_propagation(input)
         out = artificialNN.mapping_output(out, [[LIM_m_x, LIM_M_x], [LIM_m_y, LIM_M_y]])
         outputs.append(out)
     copied_dataset[i][Po] = outputs
-    copied_dataset[i][Z] = geneticAlgorithm.calculate_fitness(outputs)
+    media, stdev = geneticAlgorithm.calculate_fitness(outputs)
+    copied_dataset[i][Z] = media
+    FF_results[0].append(media)
+    FF_results[1].append(stdev)
 
 
 sorted_dataset = sorted(copied_dataset, key=lambda output: output[Z])
@@ -109,11 +112,17 @@ sorted_dataset = sorted(copied_dataset, key=lambda output: output[Z])
 PlottingResults(sorted_dataset[0][Po])
 #PlottingResults(sorted_dataset[-1][Po])
 
-parent_list = sorted_dataset[0:POPULATION_SAVED]
+#Select the best parents for breeding
+parent_list = sorted_dataset[0 : POPULATION_SAVED]
 
-#TODO from now the copied_dataset has Poutputs and random weights
+# make children
+#children_list = geneticAlgorithm.crossover_function(parent_list, POPULATION_SIZE - POPULATION_SAVED)
+#copied_dataset = parent_list + children_list
 
-#starting_pop = ga.initialize_population(x, y)
+
+
+
+plot.PlottingPerformance(FF_results)
 
 #weights = []
 #for i in range(5):
