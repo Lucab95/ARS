@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 # == Plotting iterations ==
+
+
 def GetPlottingMatrices(x, y, func):
     X, Y = np.meshgrid(x, y)
     z = np.zeros(shape=(X.shape))
@@ -30,6 +32,12 @@ def DrawMarker(ax, x, y, value, is_final_mark):
 
 def PlottingSegment(ax, Xa, Xb, Ya, Yb):  # segment from points A to B
     ax.plot([Xa, Xb], [Ya, Yb], linewidth=1, color='black')
+
+def PlottingResults(values, x_list, y_list, function):
+    v, ax = PlotFunction(x_list, y_list, function)
+    for dot in values:
+        DrawMarker(ax, dot[0], dot[1], "", False)
+    v.show()
 
 def PlottingPerformance(Z_list):
     asd = len(Z_list[0])
