@@ -1,78 +1,103 @@
-# -*- coding: utf-8 -*-
-import genetic_algorithm as ga
-import plotting as plot
+
+import pygame
+import sys
 import numpy as np
-from math import cos, pi
-from copy import deepcopy
+import math
+from pygame.locals import K_t, K_g, K_w, K_s, K_o, K_l, K_x, KEYDOWN
+import time
+import robot as rb
 
-# ===  Defining Benchmark Functions  ===
-def Rosenbrock(x, y):  # MIN 0
-    a, b = 0, 100;
-    return (a - x) ** 2 + b * (y - x ** 2) ** 2
+#######################################################
+################# PROPERTIES ##########################
+SIZE_SCREEN = width, height = 1000, 700
+COLOR_SCREEN = 255,255,255
+COLOR_ENVIROMENT = 90, 90, 255
+MAX_DISTANCE_SENSOR = 200
+MAX_VELOCITY = 100
+MOTOR_GRIP = MAX_VELOCITY/10
+ROBOT_RADIUS = 30
+ROBOT_POSITION = [200, 300, 60] # X Y THETA in GRAD
+DELTA_T = .03
+FPS = 200 #Frames per second
+#######################################################
+#######################################################
+L, R = 0, 1
+X, Y, TH = 0, 1, 2
 
-def Rastrigin(x, y):  # MIN 0
-    return 10 * 2 + (x ** 2 - 10 * cos(2 * pi * x)) + (y ** 2 - 10 * cos(2 * pi * y))
+class Environment():
+	def __init__(self, walls):
+		self.walls = walls
 
+	def round_Y(self, point):  # INVERT Y to get a right movement and axis origin
+		return (int(round(point[X])), int(round(screen.get_size()[Y] - point[Y])))
 
-# ===  INPUTS  ===
-FITNESS_FUNCTION = Rastrigin  # Rosenbrock
-POPULATION_SIZE = 60
-PARENTS_NUMBER = int(POPULATION_SIZE / 4)
-MUTATION_PROBABILITY = 0.05
-MUTATION_P_STEP = 1.5
-MANTAIN_PARENTS = True
+	def draw_environment(self):
+		#rects = []
+		for wall in self.walls:
+			pygame.draw.line(screen, COLOR_ENVIROMENT, self.round_Y(wall[0]), self.round_Y(wall[1]), 4)
+			#rects.append()
+		#return rects
 
-GENETIC_EPOCHS = 50
-INDIVIDUAL_STEPS = 5
+# == MAIN ==
+collision_flag = False # Inidcator of a collision
+pygame.init()  # Initializing library
+screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
+FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
 
+#init environment
+env = Environment(
+	[
+		[  (30,30), (970,30)],
+		[ (970,30),(970,670)],
+		[(970,670), (30,670)],
+		[ (30,670),  (30,30)],
+		[(200,200),(800,200)],
+		[(200,200),(500,500)],
+		[(800,200),(500,500)],
+	]
+)
 
-# ===  Calculating x,y Values  ===
-LIM_m_x, LIM_M_x = -1, 1
-LIM_m_y, LIM_M_y = -1, 1
-if FITNESS_FUNCTION.__name__ == "Rosenbrock":
-    LIM_m_x, LIM_M_x = -2, 2
-    LIM_m_y, LIM_M_y = -1, 3
-else:  # Rastrigin
-    LIM_m_x, LIM_M_x = -5, 5
-    LIM_m_y, LIM_M_y = -5, 5
-x_range_list = np.linspace(LIM_m_x, LIM_M_x, 200)
-y_range_list = np.linspace(LIM_m_y, LIM_M_y, 200)
+#limits_environment = env.get_limits() # Getting the boundaries of the environment
+env.draw_environment() # Drawing the environment
 
+#init robot
+robot = rb.Robot(2*ROBOT_RADIUS, MAX_VELOCITY, MAX_DISTANCE_SENSOR)
+robot.position = [ROBOT_POSITION[0], ROBOT_POSITION[1], math.radians(ROBOT_POSITION[2])]
+robot.robot_moving(screen, env.walls, DELTA_T)
 
-# ===  MAIN  ===
-Pi, Po, Z = 0, 1, 2
-X, Y = 0, 1
+# Main loop of the game
+while True:
+	screen.fill(COLOR_SCREEN) # Background screen
 
-# INITS
-geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, MUTATION_PROBABILITY, MUTATION_P_STEP)
-FF_results = [[], [], []]  # best, media,stdev
+	for event in pygame.event.get():  # Event observer
+		if event.type == pygame.QUIT: # Exit
+			pygame.quit()
+			sys.exit(1)
 
+		##### >>>>> COMPLEX MOVE <<<<< #####
+		if event.type == KEYDOWN: # Press key
+			if event.key == K_w:
+				robot.ChangeMotorVelocity(L,  MOTOR_GRIP)
+			if event.key == K_s:
+				robot.ChangeMotorVelocity(L, -MOTOR_GRIP)
+			if event.key == K_o:
+				robot.ChangeMotorVelocity(R,  MOTOR_GRIP)
+			if event.key == K_l:
+				robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
+			if event.key == K_t:
+				robot.ChangeMotorVelocity(L,  MOTOR_GRIP)
+				robot.ChangeMotorVelocity(R,  MOTOR_GRIP)
+			if event.key == K_g:
+				robot.ChangeMotorVelocity(L,  -MOTOR_GRIP)
+				robot.ChangeMotorVelocity(R,  -MOTOR_GRIP)
+			if event.key == K_x:
+				robot.NewMotorVelocity(L,  0)
+				robot.NewMotorVelocity(R,  0)
 
-# INIT DATASET
-dataset = geneticAlgorithm.initialize_population(POPULATION_SIZE, x_range_list, y_range_list)
-plot.PlottingResults(dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
+	#Update robot and environment
+	env.draw_environment() # Drawing the environment
+	robot.robot_moving(screen, env.walls, DELTA_T)
 
-best, media, stdev = geneticAlgorithm.calculate_fitness(dataset)
-FF_results[0].append(best)
-FF_results[1].append(media)
-FF_results[2].append(stdev)
-
-copied_dataset = np.array(deepcopy(dataset))
-for i in range(1, GENETIC_EPOCHS + 1):
-    parents = geneticAlgorithm.select_parents(copied_dataset, PARENTS_NUMBER)
-    copied_dataset = geneticAlgorithm.crossover_function(parents, POPULATION_SIZE, MANTAIN_PARENTS)
-    copied_dataset = geneticAlgorithm.mutation_function(copied_dataset)
-    if MANTAIN_PARENTS:
-        all_individuals= parents + copied_dataset
-        copied_dataset = deepcopy(all_individuals)
-
-    best, media, stdev = geneticAlgorithm.calculate_fitness(copied_dataset)
-    FF_results[0].append(best)
-    FF_results[1].append(media)
-    FF_results[2].append(stdev)
-
-    if i % 10 == 0:
-        plot.PlottingResults(copied_dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
-
-#plot.PlottingResults(copied_dataset, x_range_list, y_range_list, FITNESS_FUNCTION)
-plot.PlottingPerformance(FF_results)
+	#Update screen
+	pygame.display.update()
+	FPSCLOCK.tick(FPS)
