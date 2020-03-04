@@ -16,11 +16,12 @@ import math as m
 
 X, Y, TH = 0, 1, 2
 L, R = 0, 1
-inf_number = math.pow(10,50)
+inf_number = math.pow(10, 50)
 
 class Robot():
-  def __init__(self, length, max_velocity, max_distance_sensor):
-    self.position = [0, 0, 0] #X Y TH
+  def __init__(self, screen, length, max_velocity, max_distance_sensor):
+    self.screen = screen
+    self.position = [0, 0, 0]  # X Y TH
     self.axis_length = length
     self.max_velocity = max_velocity
     self.max_distance_sensor = max_distance_sensor
@@ -79,10 +80,10 @@ class Robot():
   def round(self, value):
     return int(round(value))
 
-  def round_Y(self, screen, value): # INVERT Y to get a right movement and axis origin
-    return int(round(screen.get_size()[Y] - value))
+  def round_Y(self, value):  # INVERT Y to get a right movement and axis origin
+    return int(round(self.screen.get_size()[Y] - value))
 
-  def use_sensors(self, screen, wall_list):
+  def use_sensors(self, wall_list):
     angle = self.position[TH]
     radius_robot = 0.5 * self.axis_length
 
@@ -99,13 +100,13 @@ class Robot():
 
       sensor_points = [(sensor_x, sensor_y), (start_x, start_y)]
 
-      pointA = (self.round(start_x), self.round_Y(screen, start_y))
-      pointB = (self.round(sensor_x), self.round_Y(screen, sensor_y))
+      pointA = (self.round(start_x), self.round_Y(start_y))
+      pointB = (self.round(sensor_x), self.round_Y(sensor_y))
 
-      pygame.draw.line(screen, (255, 0, 0), pointA, pointB, 1)
+      pygame.draw.line(self.screen, (255, 0, 0), pointA, pointB, 1)
 
       # Creating the sensor line
-      #asd = [sensors[i].topleft, sensors[i].bottomright]
+      # asd = [sensors[i].topleft, sensors[i].bottomright]
       line_sensor = LineString([sensor_points[0], sensor_points[1]])
       for wall in wall_list:
         # Creating the environment line
@@ -117,7 +118,7 @@ class Robot():
 
       angle += math.radians(30)
 
-  def draw_robot(self, screen, coll_flag):
+  def draw_robot(self, coll_flag):
     # Colours for collision
     if coll_flag:
       robot_color = (255, 0, 0)
@@ -126,22 +127,22 @@ class Robot():
 
     # Body of the robot
     radius_robot = 0.5*self.axis_length
-    center_robot = (self.round(self.position[X]), self.round_Y(screen, self.position[Y]))
-    pygame.draw.circle(screen, robot_color, center_robot, self.round(radius_robot), 2)
+    center_robot = (self.round(self.position[X]), self.round_Y(self.position[Y]))
+    pygame.draw.circle(self.screen, robot_color, center_robot, self.round(radius_robot), 2)
 
     # Head of the robot
     head_x = self.position[X] + (radius_robot * math.cos(self.position[TH]) * 1)
     head_y = self.position[Y] + (radius_robot * math.sin(self.position[TH]) * 1)
 
-    head_point = (self.round(head_x), self.round_Y(screen, head_y))
-    pygame.draw.line(screen, robot_color, center_robot, head_point, 2)
+    head_point = (self.round(head_x), self.round_Y(head_y))
+    pygame.draw.line(self.screen, robot_color, center_robot, head_point, 2)
 
     def RobotLabel(value, x, y, font_size):
       font = pygame.font.SysFont("dejavusans", font_size)
       label = font.render(str(format(value, '.0f')), True, (0,0,0))
       posX = x - 0.5*label.get_rect().width
       posY = y + 0.5*label.get_rect().height
-      screen.blit(label, (self.round(posX),self.round_Y(screen, posY)))
+      self.screen.blit(label, (self.round(posX), self.round_Y(posY)))
 
     # Sensors of the robot
     angle = self.position[TH]
@@ -248,7 +249,7 @@ class Robot():
     self.position = deepcopy(new_position)
     return coll_flag
 
-  def robot_moving(self, screen, wall_list, dt):
+  def robot_moving(self, wall_list, dt):
     collision_flag = self.update_position(wall_list, dt)
-    self.use_sensors(screen, wall_list)
-    self.draw_robot(screen, collision_flag)
+    self.use_sensors(wall_list)
+    self.draw_robot(collision_flag)
