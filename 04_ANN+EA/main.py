@@ -5,10 +5,12 @@ import math
 from pygame.locals import K_t, K_g, K_w, K_s, K_o, K_l, K_x, KEYDOWN
 import robot as rb
 import environment as env
-import time
+import genetic_algorithm as ga
+import artificial_neural_network as nna
+
 
 #######################################################
-################# PROPERTIES ##########################
+############### GAME PROPERTIES #######################
 SIZE_SCREEN = width, height = 1000, 700
 COLOR_SCREEN = 255, 255, 255
 COLOR_ENVIROMENT = 90, 90, 255
@@ -22,8 +24,37 @@ MAP_STEPS = 50 #int(DELTA_T * 5000)
 #######################################################
 #######################################################
 
+#######################################################
+################# GA PROPERTIES #######################
+FITNESS_FUNCTION = 1  # TODO
+POPULATION_SIZE = 3
+PARENTS_NUMBER = int(POPULATION_SIZE / 5)
+MUTATION_PROBABILITY = 0.05
+MUTATION_P_STEP = 1.5  # TODO
+MANTAIN_PARENTS = True
 
-# == MAIN ==
+GENETIC_EPOCHS = 50
+#######################################################
+#######################################################
+
+#######################################################
+################# NNA PROPERTIES ######################
+INPUTS_SIZE = 12
+HIDDEN_LAYER_SIZE = 24
+OUTPUTS_SIZE = 2
+
+#######################################################
+#######################################################
+
+# == INIT NNA, GA AND POPULATION ==
+neuralNetwork = nna.ArtificialNeuralNetwork(INPUTS_SIZE, HIDDEN_LAYER_SIZE, OUTPUTS_SIZE)
+geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, MUTATION_PROBABILITY, MUTATION_P_STEP)
+FF_results = [[], [], []]  # best, media,stdev
+population_array = []
+for i in range(POPULATION_SIZE):
+	population_array.append(neuralNetwork.initialize_random_weights())
+
+# == INIT GAME ==
 L, R = 0, 1
 X, Y, TH = 0, 1, 2
 collision_flag = False  # Inidcator of a collision
@@ -31,8 +62,6 @@ pygame.init()  # Initializing library
 
 screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
 FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
-
-#GAME_BORDERS = 	[[(30, 30), (970, 30)], [(970, 30), (970, 670)], [(970, 670), (30, 670)], [(30, 670),  (30, 30)]]
 
 ROBOT_POSITION_FIRST_MAP = [100, 100, math.radians(0)]
 WALLS_FIRST_MAP = 		[
@@ -76,18 +105,19 @@ def init_new_map(walls, init_position):
 	return environment, robot
 
 def game_check(steps, n_map, environment, robot):
-	maps = 	[ WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
+	maps = [ WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
 	positions = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
 	if steps >= MAP_STEPS:
 		if n_map >= 2:# GAME OVER
 			pygame.quit()
 			sys.exit(1)
 
-		n_map +=1
+		n_map += 1
 		steps = 0
 		environment, robot = init_new_map(maps[n_map], positions[n_map])
 	steps += 1
 	return steps, n_map, environment, robot
+
 
 # init environment and robot
 environment, robot = init_new_map(WALLS_FIRST_MAP, ROBOT_POSITION_FIRST_MAP)
@@ -96,41 +126,38 @@ environment.draw_environment()
 robot.robot_moving(environment.walls, DELTA_T)
 
 
-# Main loop of the game
-current_map ,steps = 0, 0
-while True:
-	steps, current_map, environment, robot = game_check(steps, current_map, environment, robot)
+for epoch in range(GENETIC_EPOCHS):
+	# confronta i valori e trova i 10 genitori
 
-	for event in pygame.event.get():  # Event observer
-		if event.type == pygame.QUIT:  # Exit
-			pygame.quit()
-			sys.exit(1)
+	# fai figliare i genitori e crea 50 nuovi robot
 
-		##### >>>>> COMPLEX MOVE <<<<< #####
-		if event.type == KEYDOWN:  # Press key
-			if event.key == K_w:
-				robot.ChangeMotorVelocity(L,  MOTOR_GRIP)
-			if event.key == K_s:
-				robot.ChangeMotorVelocity(L, -MOTOR_GRIP)
-			if event.key == K_o:
-				robot.ChangeMotorVelocity(R,  MOTOR_GRIP)
-			if event.key == K_l:
-				robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
-			if event.key == K_t:
-				robot.ChangeMotorVelocity(L,  MOTOR_GRIP)
-				robot.ChangeMotorVelocity(R,  MOTOR_GRIP)
-			if event.key == K_g:
-				robot.ChangeMotorVelocity(L,  -MOTOR_GRIP)
-				robot.ChangeMotorVelocity(R,  -MOTOR_GRIP)
-			if event.key == K_x:
-				robot.NewMotorVelocity(L,  0)
-				robot.NewMotorVelocity(R,  0)
+	for current_robot in population_array:
+		#initialize weights for current robot
+		neuralNetwork.weights_0L = current_robot[0]
+		neuralNetwork.weights_1L = current_robot[1]
 
-	# Update robot and environment
-	screen.fill(COLOR_SCREEN)  # Background screen
-	environment.draw_environment()  # Drawing the environment
-	robot.robot_moving(environment.walls, DELTA_T)
+		#start game for current robot
+		current_map, steps = 0, 0
+		CONTINUE_GAME = True
+		# Main loop of the game
+		while CONTINUE_GAME:
+			steps, current_map, environment, robot = game_check(steps, current_map, environment, robot)
 
-	# Update screen
-	pygame.display.update()
-	FPSCLOCK.tick(FPS)
+			# calculate Vl and Vr from [0,1]
+			output = neuralNetwork.forward_propagation(robot.sensor_list)
+			print(output)
+			robot.motor = neuralNetwork.mapping_output(output, [[-robot.max_velocity, robot.max_velocity],[-robot.max_velocity, robot.max_velocity]])
+			print(robot.motor)
+			# mapping Vl and Vr output
+			# TODO
+
+			# Update robot and environment
+			screen.fill(COLOR_SCREEN)  # Background screen
+			environment.draw_environment()  # Drawing the environment
+			robot.robot_moving(environment.walls, DELTA_T)
+
+			# Update screen
+			pygame.display.update()
+			FPSCLOCK.tick(FPS)
+
+		# salva i 3 valori ff ottenuti

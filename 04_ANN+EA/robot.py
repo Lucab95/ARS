@@ -188,23 +188,10 @@ class Robot():
       for wall in wall_list:
         line_wall = LineString([wall[0], wall[1]])
         if robot_shape.intersects(line_wall) or traveled_line.intersects(line_wall):
-          #asd = robot_shape.intersection(line_wall)
-          #print(asd)
           wall_conflict.append(wall)
           collision_flag = True
 
           if len(wall_conflict) >= 2:
-            # If the robot intersects with more than one wall, it's in a corner and should stay there
-            # OR is in a convex corner and try to figure out
-          #  def common_member(a, b):
-          #    a_set = set(a)
-          #    b_set = set(b)
-          #    if (a_set & b_set):
-          #      return True
-          #    else:
-          #      return False
-          #  spam = deepcopy(wall_conflict)
-
             return (self.position[X], self.position[Y], th), collision_flag
 
           new = [x, y, th]

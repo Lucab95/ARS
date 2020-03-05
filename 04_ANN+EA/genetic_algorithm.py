@@ -11,15 +11,6 @@ class GeneticAlgorithm:
         self.mutation_prob = mutation_prob
         self.mutation_prob_step = mutation_prob_step
 
-    def initialize_population(self, pop_size, x_range, y_range):
-        population = []
-        for i in range(pop_size):
-            x = random.choice(x_range)
-            y = random.choice(y_range)
-            z = self.fitness_function(x, y)
-            population.append(np.array([x, y, z]))
-        return np.array(population)
-
     def select_parents(self, parent_array, no_parents):  # truncated rank-based selection
         sorted_dataset = sorted(parent_array, key=lambda output: output[Z])
         return sorted_dataset[0:no_parents]

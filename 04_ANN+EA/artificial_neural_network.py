@@ -14,6 +14,11 @@ class ArtificialNeuralNetwork:
         self.bias_0L = np.ones((1, n_hidden))
         self.bias_1L = np.ones((1, n_outputs))
 
+    def initialize_random_weights(self):
+        W0 = np.random.rand(self.inputSize, self.hiddenSize)
+        W1 = np.random.rand(self.hiddenSize, self.outputSize)
+        return [W0, W1]
+
     def _random_weights(self, n, m):
         return np.random.randn(n, m)
 
@@ -30,11 +35,6 @@ class ArtificialNeuralNetwork:
     def mapping_input(self, input, input_range):  # [A,B] -> [0,1]
         pass
         # TODO
-        #new_output = []
-        #for i in range(len(output)):
-        #    new_value= np.interp(output[i], [0, 1], [output_range[i][0], output_range[i][1]])
-        #    new_output.append(new_value)
-        #return new_output
 
     def mapping_output(self, output, output_range):  #  [0,1] -> [A,B]
         new_output = []
