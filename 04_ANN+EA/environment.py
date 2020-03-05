@@ -17,3 +17,4 @@ class Environment():
 	def draw_environment(self):
 		for wall in self.walls:
 			pygame.draw.line(self.screen, self.color, self.round_Y(wall[0]), self.round_Y(wall[1]), self.size)
+
