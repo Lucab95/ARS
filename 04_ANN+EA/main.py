@@ -2,6 +2,7 @@ import pygame
 import sys
 import numpy as np
 import math
+import time
 
 import shapely
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
@@ -26,7 +27,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 45
 DELTA_T = .05
 FPS = 200  # Frames per second
-MAP_STEPS = 50
+MAP_STEPS = 200
 
 ROBOT_DRIVE = True
 #######################################################
@@ -35,12 +36,12 @@ ROBOT_DRIVE = True
 #######################################################
 ################# GA PROPERTIES #######################
 FITNESS_FUNCTION = 1  # TODO
-POPULATION_SIZE = 3
-PARENTS_NUMBER = int(POPULATION_SIZE / 5)
 MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 1.5  # TODO
 MANTAIN_PARENTS = True
 
+POPULATION_SIZE = 3
+PARENTS_NUMBER = int(POPULATION_SIZE / 5)
 GENETIC_EPOCHS = 50
 #######################################################
 #######################################################
@@ -121,8 +122,6 @@ def update_dust():
 
 		if not dustx[1]:
 			if point.within(robot_shape):
-				# print("reached", dustx)
-				# print(idx)
 				dust.reached(idx)
 
 # init environment and robot
@@ -140,7 +139,6 @@ for epoch in range(GENETIC_EPOCHS):
 		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
 		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
 
-
 		#initialize weights for current robot
 		neuralNetwork.weights_0L = current_robot[0]
 		neuralNetwork.weights_1L = current_robot[1]
@@ -149,7 +147,6 @@ for epoch in range(GENETIC_EPOCHS):
 		for new_map, new_position in zip(maps_list, positions_list):
 
 			#change level and reset dust
-
 			environment, robot = init_new_map(new_map, new_position)
 			dust = du.Dust(DUST_POINT, SIZE_SCREEN)
 
@@ -170,9 +167,10 @@ for epoch in range(GENETIC_EPOCHS):
 				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
 					output = neuralNetwork.forward_propagation(robot.sensor_list)
-					#print("OUTPUTS: ", output)
 					robot.motor = neuralNetwork.mapping_output_velocity(output, robot.max_velocity)
-					#print("VELOCITY: ", robot.motor)
+					print("SENSORS: ", robot.sensor_list)
+					print("OUTPUTS: ", output)
+					print("VELOCITY: ", robot.motor)
 
 				# Update screen, robot and environment
 				screen.fill(COLOR_SCREEN)  # Background screen
@@ -182,6 +180,7 @@ for epoch in range(GENETIC_EPOCHS):
 				dust.draw_dust(screen)
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
+				#time.sleep(0.5)
 
 			# TODO save for one level
 

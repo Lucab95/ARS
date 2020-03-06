@@ -15,8 +15,8 @@ class ArtificialNeuralNetwork:
         self.bias_1L = np.ones((1, n_outputs))
 
     def initialize_random_weights(self):
-        W0 = np.random.rand(self.inputSize, self.hiddenSize)
-        W1 = np.random.rand(self.hiddenSize, self.outputSize)
+        W0 = np.random.randn(self.inputSize, self.hiddenSize) #np.random.rand(self.inputSize, self.hiddenSize) #
+        W1 = np.random.randn(self.hiddenSize, self.outputSize)
         return [W0, W1]
 
     def _random_weights(self, n, m):
