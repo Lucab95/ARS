@@ -37,6 +37,11 @@ class Robot():
       value = -self.max_velocity
     return value
 
+  def changeXPOS(self, value):
+    self.position = [value, self.position[Y], self.position[TH]]
+  def changeYPOS(self, value):
+    self.position = [self.position[X], value, self.position[TH]]
+
   def NewMotorVelocity(self, n_motor, value):
     self.motor[n_motor] = self.SetInARange(value)
 
@@ -136,6 +141,7 @@ class Robot():
 
     head_point = (self.round(head_x), self.round_Y(head_y))
     pygame.draw.line(self.screen, robot_color, center_robot, head_point, 2)
+
     def RobotLabel(value, x, y, font_size):
       font = pygame.font.SysFont("dejavusans", font_size)
       label = font.render(str(format(value, '.0f')), True, (0,0,0))

@@ -42,3 +42,10 @@ class ArtificialNeuralNetwork:
             new_value= np.interp(output[i], [0, 1], [output_range[i][0], output_range[i][1]])
             new_output.append(new_value)
         return new_output
+
+    def mapping_output_velocity(self, output, limit):  #  [0,1] -> [-A,A]
+        new_output = []
+        for i in range(len(output)):
+            new_value = np.interp(output[i], [0, 1], [-limit, limit])
+            new_output.append(new_value)
+        return new_output
