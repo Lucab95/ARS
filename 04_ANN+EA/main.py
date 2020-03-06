@@ -14,13 +14,13 @@ import artificial_neural_network as nna
 SIZE_SCREEN = width, height = 1000, 700
 COLOR_SCREEN = 255, 255, 255
 COLOR_ENVIROMENT = 90, 90, 255
-MAX_DISTANCE_SENSOR = 30
+MAX_DISTANCE_SENSOR = 40
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
-ROBOT_RADIUS = 30
+ROBOT_RADIUS = 40
 DELTA_T = .02
 FPS = 200  # Frames per second
-MAP_STEPS = 50 #int(DELTA_T * 5000)
+MAP_STEPS = 300 #int(DELTA_T * 5000)
 #######################################################
 #######################################################
 
@@ -63,7 +63,7 @@ pygame.init()  # Initializing library
 screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
 FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
 
-ROBOT_POSITION_FIRST_MAP = [100, 100, math.radians(0)]
+ROBOT_POSITION_FIRST_MAP = [90, 90, math.radians(0)]
 WALLS_FIRST_MAP = 		[
 						[(30, 30), (970, 30)],
 						[(970, 30), (970, 670)],

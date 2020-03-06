@@ -114,7 +114,7 @@ class Robot():
         # If collision -> Take value
         if str(line_sensor.intersection(line_env)) != "LINESTRING EMPTY":
           point = Point((self.position[X], self.position[Y]))
-          self.sensor_list[i] = self.round(point.distance(line_sensor.intersection(line_env)) - radius_robot)
+          self.sensor_list[i] = point.distance(line_sensor.intersection(line_env)) - radius_robot
 
       angle += math.radians(30)
 
@@ -148,7 +148,7 @@ class Robot():
     angle = self.position[TH]
     for val in self.sensor_list:
       RobotLabel(
-        val,
+        self.round(val),
         self.position[X] + (radius_robot * math.cos(angle) * 1.5),
         self.position[Y] + (radius_robot * math.sin(angle) * 1.5),
         16
