@@ -2,8 +2,13 @@ import pygame
 import sys
 import numpy as np
 import math
+
+import shapely
 from pygame.locals import K_t, K_g, K_w, K_s, K_o, K_l, K_x, KEYDOWN
 import robot as rb
+import dust as du
+from shapely.geometry import LineString, Point
+from shapely import affinity
 import environment as env
 import genetic_algorithm as ga
 import artificial_neural_network as nna
@@ -12,7 +17,8 @@ import artificial_neural_network as nna
 #######################################################
 ############### GAME PROPERTIES #######################
 SIZE_SCREEN = width, height = 1000, 700
-COLOR_SCREEN = 255, 255, 255
+DUST_POINT = 200
+COLOR_SCREEN = 255,255,255
 COLOR_ENVIROMENT = 90, 90, 255
 MAX_DISTANCE_SENSOR = 40
 MAX_VELOCITY = 100
@@ -58,6 +64,11 @@ for i in range(POPULATION_SIZE):
 L, R = 0, 1
 X, Y, TH = 0, 1, 2
 collision_flag = False  # Inidcator of a collision
+
+def round_Y(screen, value):  # INVERT Y to get a right movement and axis origin
+	return int(round(screen.get_size()[Y] - value))
+
+
 pygame.init()  # Initializing library
 
 screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
@@ -97,6 +108,9 @@ WALLS_THIRD_MAP = 		[
 						[(800, 200), (500, 500)],
 						]
 
+#init dust
+dust = du.Dust(DUST_POINT, SIZE_SCREEN)
+color = (0,255,255)
 
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
@@ -118,6 +132,26 @@ def game_check(steps, n_map, environment, robot):
 	steps += 1
 	return steps, n_map, environment, robot
 
+	dust.draw_dust(screen)
+	robot_center = Point(robot.position[0], robot.position[1]).buffer(1)
+	# print(robot_center)
+	robot_shape = shapely.affinity.scale(robot_center, ROBOT_RADIUS, ROBOT_RADIUS)
+	dust_array = dust.get_dust()
+	for idx, dustx in enumerate(dust_array):
+	# 	# if not dustx[1]:
+	# 	# print (dustx)
+	# 	print(dustx[0])
+	# 	print(dustx[0][0], dustx[0][1])
+		point=Point(dustx[0][0],round_Y(screen, dustx[0][1]))
+		# print(point)
+		if not dustx[1]:
+			if point.within(robot_shape):
+				# print("reached", dustx)
+				# print(idx)
+				dust.reached(idx)
+	# 	# print(robot_shape.intersects(Point(dustx[0]).buffer(1)))
+				# print()
+			# dust.reached(idx)
 
 # init environment and robot
 environment, robot = init_new_map(WALLS_FIRST_MAP, ROBOT_POSITION_FIRST_MAP)
@@ -160,4 +194,6 @@ for epoch in range(GENETIC_EPOCHS):
 			pygame.display.update()
 			FPSCLOCK.tick(FPS)
 
+	# 	print(dust[0])
+	# 	pass # dust.reached(True)
 		# salva i 3 valori ff ottenuti

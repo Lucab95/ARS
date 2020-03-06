@@ -136,7 +136,6 @@ class Robot():
 
     head_point = (self.round(head_x), self.round_Y(head_y))
     pygame.draw.line(self.screen, robot_color, center_robot, head_point, 2)
-
     def RobotLabel(value, x, y, font_size):
       font = pygame.font.SysFont("dejavusans", font_size)
       label = font.render(str(format(value, '.0f')), True, (0,0,0))
@@ -182,17 +181,20 @@ class Robot():
       # create geometry of robot and path
       robot_center = Point(x, y).buffer(1)
       robot_shape = shapely.affinity.scale(robot_center, radius_robot, radius_robot)
+      # print(robot_shape)
       traveled_line = LineString([(x, y), (self.position[X], self.position[Y])])
 
       wall_conflict = []
       for wall in wall_list:
         line_wall = LineString([wall[0], wall[1]])
+        # print(wall[1])
         if robot_shape.intersects(line_wall) or traveled_line.intersects(line_wall):
           wall_conflict.append(wall)
           collision_flag = True
-
+          # print(wall_conflict)
           if len(wall_conflict) >= 2:
             return (self.position[X], self.position[Y], th), collision_flag
+
 
           new = [x, y, th]
           velocity_vector = np.subtract(new, self.position)
