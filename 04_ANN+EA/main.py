@@ -23,12 +23,12 @@ COLOR_ENVIROMENT = 90, 90, 255
 MAX_DISTANCE_SENSOR = 40
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
-ROBOT_RADIUS = 40
+ROBOT_RADIUS = 45
 DELTA_T = .05
 FPS = 200  # Frames per second
 MAP_STEPS = 50
 
-MANUAL_DRIVE = False
+ROBOT_DRIVE = True
 #######################################################
 #######################################################
 
@@ -85,7 +85,7 @@ WALLS_FIRST_MAP = 	[
 					[(800, 200), (800, 500)]
 					]
 
-ROBOT_POSITION_SECOND_MAP = [200, 600, math.radians(120)]
+ROBOT_POSITION_SECOND_MAP = [200, 610, math.radians(120)]
 WALLS_SECOND_MAP = 	[
 					[(30, 30), (970, 30)], [(970, 30), (970, 670)], [(970, 670), (30, 670)], [(30, 670), (30, 30)],  # borders
 					[(200, 200), (800, 200)],
@@ -132,8 +132,8 @@ environment.draw_environment()
 robot.robot_moving(environment.walls, DELTA_T)
 
 for epoch in range(GENETIC_EPOCHS):
-	# TODO confronta i valori e trova i 10 genitori
-	# TODO fai figliare i genitori e crea 50 nuovi robot
+	# TODO check ff values and find best parents
+	# TODO parents reproduction and new offspring
 
 	for current_robot in population_array:
 		# initialize 3 levels
@@ -149,28 +149,30 @@ for epoch in range(GENETIC_EPOCHS):
 		for new_map, new_position in zip(maps_list, positions_list):
 
 			#change level and reset dust
+
 			environment, robot = init_new_map(new_map, new_position)
 			dust = du.Dust(DUST_POINT, SIZE_SCREEN)
 
 			# init game loop
 			for steps in range(MAP_STEPS):
 
-				if MANUAL_DRIVE:
-					for event in pygame.event.get():  # Event observer
-						if event.type == pygame.QUIT:  # Exit
-							pygame.quit()
-							sys.exit(1)
+				for event in pygame.event.get():  # Event observer
+					if event.type == pygame.QUIT:  # Exit
+						pygame.quit()
+						sys.exit(1)
+					if ROBOT_DRIVE == False:
 						if event.type == KEYDOWN: # Press key
 							if event.key == K_DOWN:  robot.changeYPOS(robot.position[Y] - 5)
 							if event.key == K_UP:    robot.changeYPOS(robot.position[Y] + 5)
 							if event.key == K_LEFT:  robot.changeXPOS(robot.position[X] - 5)
 							if event.key == K_RIGHT: robot.changeXPOS(robot.position[X] + 5)
-				else:
+
+				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
 					output = neuralNetwork.forward_propagation(robot.sensor_list)
-					print("OUTPUTS: ", output)
+					#print("OUTPUTS: ", output)
 					robot.motor = neuralNetwork.mapping_output_velocity(output, robot.max_velocity)
-					print("VELOCITY: ", robot.motor)
+					#print("VELOCITY: ", robot.motor)
 
 				# Update screen, robot and environment
 				screen.fill(COLOR_SCREEN)  # Background screen
@@ -181,4 +183,6 @@ for epoch in range(GENETIC_EPOCHS):
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
 
-		# TODO salva i 3 valori ff ottenuti
+			# TODO save for one level
+
+		# TODO save 3 ff values

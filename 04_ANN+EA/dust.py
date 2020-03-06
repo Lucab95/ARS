@@ -3,7 +3,7 @@ import numpy as np
 class Dust:
     def __init__(self, dust_point, size_screen):
         self.dust_point = dust_point
-        self.dusts = self.initialize_dust(dust_point,size_screen)
+        self.dusts = self.initialize_dust(dust_point, size_screen) # [[(x,y), isCleaned],[(x,y), isCleaned],[(x,y), isCleaned]]
         # self.initial_position = # dust point posizioni in range
 
     def draw_dust(self, screen):
@@ -34,7 +34,7 @@ class Dust:
     def reached(self,index):
         # print (self.dusts[75][1])
         # print (index)
-        self.dusts[index][1]=True
+        self.dusts[index][1] = True
 
     def get_dust(self):
         return self.dusts;
