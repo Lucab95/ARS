@@ -25,7 +25,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 45
 DELTA_T = .05
 FPS = 200  # Frames per second
-MAP_STEPS = 100
+MAP_STEPS = 1
 
 ROBOT_DRIVE = True
 #######################################################
@@ -38,9 +38,13 @@ MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 1.5  # TODO
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 3
+POPULATION_SIZE = 50
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
 GENETIC_EPOCHS = 50
+
+LOAD=False
+LOAD_EPOCH = 49
+
 #######################################################
 #######################################################
 
@@ -64,10 +68,7 @@ for i in range(POPULATION_SIZE):
 # == INIT GAME ==
 L, R = 0, 1
 X, Y, TH = 0, 1, 2
-collision_flag = False  # Inidcator of a collision
-
-def round_Y(screen, value):  # INVERT Y to get a right movement and axis origin
-	return int(round(screen.get_size()[Y] - value))
+collision_flag = False  # Indicator of a collision
 
 
 pygame.init()  # Initializing library
@@ -117,29 +118,61 @@ def update_dust():
 	dust_array = dust.get_dust()
 	for idx, dustx in enumerate(dust_array):
 		point = Point(dustx[0][0], dustx[0][1])
-
 		if not dustx[1]:
 			if point.within(robot_shape):
 				dust.reached(idx)
+
+
+
+# Saves the model in a txt file
+def saveModel(epoch,pop, weights1, weights2,score):
+	scores=[]
+	name = "gen" + str(epoch) + " " + str(pop)
+	np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
+	np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
+	scores.append(score)
+	np.savetxt(("Save\\" + name +"-score.txt"),scores,fmt="%s")
+
+
+
+
+# Load a model from a txt file
+#TODO definirla quando sarà utile
+def loadModel(epoch,pop):
+	try:
+		name = "gen" + str(epoch) + " " + str(pop)
+		w1 = np.loadtxt((("Save\\" + name + "-w1.txt")))
+		w2 = np.loadtxt(("Save\\" + name + "-w2.txt"))
+	except:
+		print("The indicated model doesn't exist!")
+		time.sleep(2)
+		exit(1)
+	return w1, w2
 
 # init environment and robot
 environment, robot = init_new_map(WALLS_FIRST_MAP, ROBOT_POSITION_FIRST_MAP)
 # drawing the environment and move robot
 environment.draw_environment()
 robot.robot_moving(environment.walls, DELTA_T)
+epoch = 0
+if LOAD:
+	epoch = LOAD_EPOCH
 
-for epoch in range(GENETIC_EPOCHS):
+while epoch < GENETIC_EPOCHS:
 	# TODO check ff values and find best parents
 	# TODO parents reproduction and new offspring
-
-	for current_robot in population_array:
+	for pop_index,current_robot in enumerate(population_array):
 		# initialize 3 levels
 		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
 		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
 
 		#initialize weights for current robot
-		neuralNetwork.weights_0L = current_robot[0]
-		neuralNetwork.weights_1L = current_robot[1]
+		if LOAD and LOAD_EPOCH == epoch:
+			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch,pop_index)
+		else:
+			neuralNetwork.weights_0L = current_robot[0]
+			neuralNetwork.weights_1L = current_robot[1]
+
 
 		#start game for current robot
 		for new_map, new_position in zip(maps_list, positions_list):
@@ -150,7 +183,6 @@ for epoch in range(GENETIC_EPOCHS):
 
 			# init game loop
 			for steps in range(MAP_STEPS):
-
 				for event in pygame.event.get():  # Event observer
 					if event.type == pygame.QUIT:  # Exit
 						pygame.quit()
@@ -194,5 +226,8 @@ for epoch in range(GENETIC_EPOCHS):
 				if dust[1]:
 					score += 1
 			print(score)
-
+		saveModel(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L, score)
+		pop_index +=1
+		epoch +=1
 		# TODO save 3 ff values
+
