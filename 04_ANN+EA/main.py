@@ -22,7 +22,7 @@ MAX_DISTANCE_SENSOR = 40
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
-DELTA_T = .03
+DELTA_T = .1
 FPS = 200  # Frames per second
 MAP_STEPS = 1
 
@@ -42,7 +42,7 @@ PARENTS_NUMBER = int(POPULATION_SIZE / 5)
 GENETIC_EPOCHS = 50
 
 LOAD=False
-LOAD_EPOCH = 49
+LOAD_EPOCH = 0
 
 #######################################################
 #######################################################
@@ -105,13 +105,17 @@ WALLS_THIRD_MAP = 	[
 					]
 
 SAVING_DIRECTORY = "Save"
-try:
-	os.mkdir(SAVING_DIRECTORY)
-except OSError:
-	print("Creation of the directory %s failed" % SAVING_DIRECTORY)
-else:
-	print("Successfully created the directory %s " % SAVING_DIRECTORY)
+SCORE_DIRECTORY = "Score"
+def create_directory(dir): #function to create directories required if they don't exist
+	try:
+		os.mkdir(dir)
+	except OSError:
+		print("Creation of the directory %s failed" % dir)
+	else:
+		print("Successfully created the directory %s " % dir)
 
+create_directory(SAVING_DIRECTORY)
+create_directory(SCORE_DIRECTORY)
 
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
@@ -121,17 +125,23 @@ def init_new_map(walls, init_position):
 
 
 # Saves the model in a txt file
-def saveModel(epoch,pop, weights1, weights2,score):
-	scores=[]
+def saveModelWeight(epoch, pop, weights1, weights2):
 	name = "gen" + str(epoch) + " " + str(pop)
 	np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
 	np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
-	scores.append(score)
-	np.savetxt(("Save\\" + name +"-score.txt"),scores,fmt="%s")
+
+def saveModelScore(epoch, score,collision):
+	scores = []
+	print(score)
+	for i in range(POPULATION_SIZE):
+		string = "Robot: "+str(i)+" score: " + str(score[i]) + " collision avoided " + str(collision[i]) +"\n"
+		scores.append(string)
+	name = "gen" + str(epoch)
+	# scores.append(score)
+	np.savetxt(("Score\\" + name + "-score.txt"), scores , fmt="%s")
 
 
 # Load a model from a txt file
-#TODO definirla quando sarà utile
 def loadModel(epoch,pop):
 	try:
 		name = "gen" + str(epoch) + " " + str(pop)
@@ -159,23 +169,22 @@ while epoch <= GENETIC_EPOCHS:
 	score_array = [] # score[robot][dust_lvl]
 	for pop_index,current_robot in enumerate(population_array):
 		# initialize 3 levels
-		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP]#, WALLS_THIRD_MAP]
-		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP]#, ROBOT_POSITION_THIRD_MAP]
+		collision_robot_3lvl = []  # save collision for the single robot for all levels
+		score_robot_3lvl = []  # save score for the single robot but for all levels
+		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
+		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
 
 		robot_array = []
 		#initialize weights for current robot
 		if LOAD and LOAD_EPOCH == epoch:
 			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch, pop_index)
-			print(neuralNetwork.weights_0L, "\n\n", neuralNetwork.weights_1L)
+			# print(neuralNetwork.weights_0L, "\n\n", neuralNetwork.weights_1L)
 		else:
 			neuralNetwork.weights_0L = current_robot[0]
 			neuralNetwork.weights_1L = current_robot[1]
-
-
+			saveModelWeight(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L)
 		#start game for current robot
 		for new_map, new_position in zip(maps_list, positions_list):
-			collision_robot_3lvl = [] # save collision for the single robot for all levels
-			score_robot_3lvl = [] # save score for the single robot but for all levels
 			#change level and reset dust
 			environment, robot = init_new_map(new_map, new_position)
 			dust = du.Dust(screen, DUST_SIZE)
@@ -221,9 +230,6 @@ while epoch <= GENETIC_EPOCHS:
 					collision_avoided +=1
 				print("collisioni evitate",collision_avoided)
 			collision_robot_3lvl.append(collision_avoided)
-
-			collision_array.append(collision_robot_3lvl)
-
 			dust_array = dust.get_dust()
 			score = 0
 			for dust in dust_array:
@@ -231,14 +237,11 @@ while epoch <= GENETIC_EPOCHS:
 					score += 1
 			score_robot_3lvl.append(score)
 			print(score)
-
-
 		collision_array.append(collision_robot_3lvl)
 		score_array.append(score_robot_3lvl)
-
-		# TODO order the array population
-		saveModel(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L, score)
-
+		pop_index +=1
+	saveModelScore(epoch, score_array, collision_array)
+	epoch +=1
 	#parents = geneticAlgorithm.select_parents(population_array, PARENTS_NUMBER)
 	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
 	population_array = geneticAlgorithm.mutation_function(population_array)
