@@ -24,7 +24,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
 DELTA_T = .03
 FPS = 200  # Frames per second
-MAP_STEPS = 100
+MAP_STEPS = 1
 
 ROBOT_DRIVE = True
 #######################################################
@@ -148,19 +148,19 @@ environment, robot = init_new_map(WALLS_FIRST_MAP, ROBOT_POSITION_FIRST_MAP)
 # drawing the environment and move robot
 environment.draw_environment()
 robot.robot_moving(environment.walls, DELTA_T)
-epoch = 0
+epoch = 1
 if LOAD:
 	epoch = LOAD_EPOCH
 
-while epoch < GENETIC_EPOCHS:
-	# TODO check ff values and find best parents
-	# TODO parents reproduction and new offspring
-	for pop_index,current_robot in enumerate(population_array):
-		# initialize 3 levels
-		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
-		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
+while epoch <= GENETIC_EPOCHS:
 
-		robot_array= []
+	# TODO parents reproduction and new offspring
+	for pop_index, current_robot in enumerate(population_array):
+		# initialize 3 levels
+		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP]#, WALLS_THIRD_MAP]
+		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP]#, ROBOT_POSITION_THIRD_MAP]
+
+		robot_array = []
 		#initialize weights for current robot
 		if LOAD and LOAD_EPOCH == epoch:
 			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch, pop_index)
@@ -220,7 +220,14 @@ while epoch < GENETIC_EPOCHS:
 				if dust[1]:
 					score += 1
 			print(score)
+
+		# TODO order the array population
 		saveModel(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L, score)
-		pop_index +=1
-		epoch +=1
+
+	#parents = geneticAlgorithm.select_parents(population_array, PARENTS_NUMBER)
+	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
+	population_array = geneticAlgorithm.mutation_function(population_array)
+
+		#pop_index +=1
+	epoch +=1
 		# TODO save 3 ff values
