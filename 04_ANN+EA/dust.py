@@ -14,7 +14,7 @@ class Dust:
 
     def initialize_dust(self):
         dusts = []
-        init_margin = 45
+        init_margin = 25
         line_dust = int(self.dust_size / 10)
         dust_init_x = init_margin
         dust_init_y = init_margin
