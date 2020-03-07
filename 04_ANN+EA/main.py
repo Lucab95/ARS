@@ -1,24 +1,22 @@
-import pygame
 import sys
-import numpy as np
 import math
-import time
-
-import shapely
+import pygame
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
-import robot as rb
-import dust as du
+import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
+import robot as rb
+import dust as du
 import environment as env
 import genetic_algorithm as ga
 import artificial_neural_network as nna
-
+import time
+import numpy as np
 
 #######################################################
 ############### GAME PROPERTIES #######################
 SIZE_SCREEN = width, height = 1000, 700
-DUST_POINT = 200
+DUST_SIZE = 400
 COLOR_SCREEN = 255,255,255
 COLOR_ENVIROMENT = 90, 90, 255
 MAX_DISTANCE_SENSOR = 40
@@ -27,7 +25,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 45
 DELTA_T = .05
 FPS = 200  # Frames per second
-MAP_STEPS = 200
+MAP_STEPS = 100
 
 ROBOT_DRIVE = True
 #######################################################
@@ -118,7 +116,7 @@ def update_dust():
 	robot_shape = shapely.affinity.scale(robot_center, ROBOT_RADIUS, ROBOT_RADIUS)
 	dust_array = dust.get_dust()
 	for idx, dustx in enumerate(dust_array):
-		point = Point(dustx[0][0], round_Y(screen, dustx[0][1]))
+		point = Point(dustx[0][0], dustx[0][1])
 
 		if not dustx[1]:
 			if point.within(robot_shape):
@@ -148,7 +146,7 @@ for epoch in range(GENETIC_EPOCHS):
 
 			#change level and reset dust
 			environment, robot = init_new_map(new_map, new_position)
-			dust = du.Dust(DUST_POINT, SIZE_SCREEN)
+			dust = du.Dust(screen, DUST_SIZE)
 
 			# init game loop
 			for steps in range(MAP_STEPS):
@@ -159,29 +157,42 @@ for epoch in range(GENETIC_EPOCHS):
 						sys.exit(1)
 					if ROBOT_DRIVE == False:
 						if event.type == KEYDOWN: # Press key
-							if event.key == K_DOWN:  robot.changeYPOS(robot.position[Y] - 5)
-							if event.key == K_UP:    robot.changeYPOS(robot.position[Y] + 5)
-							if event.key == K_LEFT:  robot.changeXPOS(robot.position[X] - 5)
-							if event.key == K_RIGHT: robot.changeXPOS(robot.position[X] + 5)
+							if event.key == K_DOWN:
+								robot.ChangeMotorVelocity(L, -MOTOR_GRIP)
+								robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
+							if event.key == K_UP:
+								robot.ChangeMotorVelocity(L, MOTOR_GRIP)
+								robot.ChangeMotorVelocity(R, MOTOR_GRIP)
+							if event.key == K_LEFT:
+								robot.ChangeMotorVelocity(L, -MOTOR_GRIP)
+								robot.ChangeMotorVelocity(R, 2*MOTOR_GRIP)
+							if event.key == K_RIGHT:
+								robot.ChangeMotorVelocity(L, 2*MOTOR_GRIP)
+								robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
 
 				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
 					output = neuralNetwork.forward_propagation(robot.sensor_list)
 					robot.motor = neuralNetwork.mapping_output_velocity(output, robot.max_velocity)
-					print("SENSORS: ", robot.sensor_list)
-					print("OUTPUTS: ", output)
-					print("VELOCITY: ", robot.motor)
+					#print("SENSORS: ", robot.sensor_list)
+					#print("OUTPUTS: ", output)
+					#print("VELOCITY: ", robot.motor)
 
 				# Update screen, robot and environment
 				screen.fill(COLOR_SCREEN)  # Background screen
 				environment.draw_environment()  # Drawing the environment
 				robot.robot_moving(environment.walls, DELTA_T)
 				update_dust()
-				dust.draw_dust(screen)
+				dust.draw_dust()
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
 				#time.sleep(0.5)
 
-			# TODO save for one level
+			score = 0
+			dust_array = dust.get_dust()
+			for dust in dust_array:
+				if dust[1]:
+					score += 1
+			print(score)
 
 		# TODO save 3 ff values
