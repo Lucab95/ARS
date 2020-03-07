@@ -1,5 +1,8 @@
 import pygame
-import numpy as np
+import shapely
+from shapely.geometry import Point
+from shapely import affinity
+
 
 X, Y, TH = 0, 1, 2
 class Dust:
@@ -38,10 +41,23 @@ class Dust:
             # print(dust[1], idx)
             color = (0, 255, 100)
             if dust[1] == True:
-                color=(90,90,255)
+                color = (90, 90, 255)
             x = self.round(dust[0][X])
             y = self.round_Y(dust[0][Y])
             pygame.draw.rect(self.screen, color, (x, y, 5, 5))
+
+    def update_dust(self, robot):
+        robot_center = Point(robot.position[X], robot.position[Y]).buffer(1)
+        robot_radius = int(0.5*robot.axis_length)
+        robot_shape = shapely.affinity.scale(robot_center, robot_radius, robot_radius)
+        dust_array = self.get_dust()
+        for idx, dustx in enumerate(dust_array):
+            point = Point(dustx[0][0], dustx[0][1])
+
+            if not dustx[1]:
+                if point.within(robot_shape):
+                    self.reached(idx)
+        self.draw_dust()
 
     def reached(self,index):
         # print (self.dusts[75][1])

@@ -2,16 +2,12 @@ import sys
 import math
 import pygame
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
-import shapely
-from shapely.geometry import LineString, Point
-from shapely import affinity
 import robot as rb
 import dust as du
 import environment as env
 import genetic_algorithm as ga
 import artificial_neural_network as nna
-import time
-import numpy as np
+
 
 #######################################################
 ############### GAME PROPERTIES #######################
@@ -22,7 +18,7 @@ COLOR_ENVIROMENT = 90, 90, 255
 MAX_DISTANCE_SENSOR = 40
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
-ROBOT_RADIUS = 45
+ROBOT_RADIUS = 50
 DELTA_T = .05
 FPS = 200  # Frames per second
 MAP_STEPS = 1
@@ -112,17 +108,6 @@ def init_new_map(walls, init_position):
 	return environment, robot
 
 
-def update_dust():
-	robot_center = Point(robot.position[X], robot.position[Y]).buffer(1)
-	robot_shape = shapely.affinity.scale(robot_center, ROBOT_RADIUS, ROBOT_RADIUS)
-	dust_array = dust.get_dust()
-	for idx, dustx in enumerate(dust_array):
-		point = Point(dustx[0][0], dustx[0][1])
-		if not dustx[1]:
-			if point.within(robot_shape):
-				dust.reached(idx)
-
-
 
 # Saves the model in a txt file
 def saveModel(epoch,pop, weights1, weights2,score):
@@ -166,6 +151,7 @@ while epoch < GENETIC_EPOCHS:
 		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
 		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
 
+		robot_array= []
 		#initialize weights for current robot
 		if LOAD and LOAD_EPOCH == epoch:
 			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch,pop_index)
@@ -214,8 +200,7 @@ while epoch < GENETIC_EPOCHS:
 				screen.fill(COLOR_SCREEN)  # Background screen
 				environment.draw_environment()  # Drawing the environment
 				robot.robot_moving(environment.walls, DELTA_T)
-				update_dust()
-				dust.draw_dust()
+				dust.update_dust(robot)
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
 				#time.sleep(0.5)

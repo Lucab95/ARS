@@ -5,14 +5,10 @@
 from copy import deepcopy
 import math
 import pygame
-from shapely.geometry import LineString, Point
-
-import pygame
 import numpy as np
 import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
-import math as m
 
 X, Y, TH = 0, 1, 2
 L, R = 0, 1
