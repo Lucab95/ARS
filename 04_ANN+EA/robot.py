@@ -244,3 +244,4 @@ class Robot():
     collision_flag = self.update_position(wall_list, dt)
     self.use_sensors(wall_list)
     self.draw_robot(collision_flag)
+    return collision_flag

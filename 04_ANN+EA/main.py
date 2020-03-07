@@ -155,7 +155,9 @@ if LOAD:
 while epoch <= GENETIC_EPOCHS:
 
 	# TODO parents reproduction and new offspring
-	for pop_index, current_robot in enumerate(population_array):
+	collision_array = [] # collisions[robot][collision_level]
+	score_array = [] # score[robot][dust_lvl]
+	for pop_index,current_robot in enumerate(population_array):
 		# initialize 3 levels
 		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP]#, WALLS_THIRD_MAP]
 		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP]#, ROBOT_POSITION_THIRD_MAP]
@@ -164,6 +166,7 @@ while epoch <= GENETIC_EPOCHS:
 		#initialize weights for current robot
 		if LOAD and LOAD_EPOCH == epoch:
 			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch, pop_index)
+			print(neuralNetwork.weights_0L, "\n\n", neuralNetwork.weights_1L)
 		else:
 			neuralNetwork.weights_0L = current_robot[0]
 			neuralNetwork.weights_1L = current_robot[1]
@@ -171,11 +174,12 @@ while epoch <= GENETIC_EPOCHS:
 
 		#start game for current robot
 		for new_map, new_position in zip(maps_list, positions_list):
-
+			collision_robot_3lvl = [] # save collision for the single robot for all levels
+			score_robot_3lvl = [] # save score for the single robot but for all levels
 			#change level and reset dust
 			environment, robot = init_new_map(new_map, new_position)
 			dust = du.Dust(screen, DUST_SIZE)
-
+			collision_avoided=0
 			# init game loop
 			for steps in range(MAP_STEPS):
 				for event in pygame.event.get():  # Event observer
@@ -208,18 +212,29 @@ while epoch <= GENETIC_EPOCHS:
 				# Update screen, robot and environment
 				screen.fill(COLOR_SCREEN)  # Background screen
 				environment.draw_environment()  # Drawing the environment
-				robot.robot_moving(environment.walls, DELTA_T)
+				collided = robot.robot_moving(environment.walls, DELTA_T)
 				dust.update_dust(robot)
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
 				#time.sleep(0.5)
+				if not collided:
+					collision_avoided +=1
+				print("collisioni evitate",collision_avoided)
+			collision_robot_3lvl.append(collision_avoided)
 
-			score = 0
+			collision_array.append(collision_robot_3lvl)
+
 			dust_array = dust.get_dust()
+			score = 0
 			for dust in dust_array:
 				if dust[1]:
 					score += 1
+			score_robot_3lvl.append(score)
 			print(score)
+
+
+		collision_array.append(collision_robot_3lvl)
+		score_array.append(score_robot_3lvl)
 
 		# TODO order the array population
 		saveModel(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L, score)
@@ -230,4 +245,5 @@ while epoch <= GENETIC_EPOCHS:
 
 		#pop_index +=1
 	epoch +=1
+
 		# TODO save 3 ff values
