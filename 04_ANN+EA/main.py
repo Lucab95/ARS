@@ -1,6 +1,9 @@
 import sys
+import os
 import math
+import numpy as np
 import pygame
+import time
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
 import robot as rb
 import dust as du
@@ -19,9 +22,9 @@ MAX_DISTANCE_SENSOR = 40
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
-DELTA_T = .05
+DELTA_T = .03
 FPS = 200  # Frames per second
-MAP_STEPS = 1
+MAP_STEPS = 100
 
 ROBOT_DRIVE = True
 #######################################################
@@ -101,12 +104,20 @@ WALLS_THIRD_MAP = 	[
 					[(800, 200), (800, 500)]
 					]
 
+SAVING_DIRECTORY = "Save"
+try:
+	os.mkdir(SAVING_DIRECTORY)
+except OSError:
+	print("Creation of the directory %s failed" % SAVING_DIRECTORY)
+else:
+	print("Successfully created the directory %s " % SAVING_DIRECTORY)
+
+
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
 	robot = rb.Robot(screen, 2 * ROBOT_RADIUS, MAX_VELOCITY, MAX_DISTANCE_SENSOR)
 	robot.position = init_position
 	return environment, robot
-
 
 
 # Saves the model in a txt file
@@ -117,8 +128,6 @@ def saveModel(epoch,pop, weights1, weights2,score):
 	np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
 	scores.append(score)
 	np.savetxt(("Save\\" + name +"-score.txt"),scores,fmt="%s")
-
-
 
 
 # Load a model from a txt file
@@ -154,7 +163,7 @@ while epoch < GENETIC_EPOCHS:
 		robot_array= []
 		#initialize weights for current robot
 		if LOAD and LOAD_EPOCH == epoch:
-			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch,pop_index)
+			neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch, pop_index)
 		else:
 			neuralNetwork.weights_0L = current_robot[0]
 			neuralNetwork.weights_1L = current_robot[1]
@@ -215,4 +224,3 @@ while epoch < GENETIC_EPOCHS:
 		pop_index +=1
 		epoch +=1
 		# TODO save 3 ff values
-
