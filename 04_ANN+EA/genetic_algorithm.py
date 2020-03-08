@@ -18,13 +18,14 @@ class GeneticAlgorithm:
     def crossover_function(self, parent_array, pop_size, mantain):
         W0, W1 = 0, 1
         offspring = []
-        print("print", parent_array)
         parent_size = len(parent_array)
-        print("parent",parent_size)
         offspring_size = pop_size
         offset = 0
         if mantain:
             offspring_size -= parent_size
+
+        if offspring_size == 0: # no space for sons
+            return parent_array
 
         for i in range(offspring_size):
             if (i % parent_size) == 0:
