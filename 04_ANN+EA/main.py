@@ -1,7 +1,6 @@
 import sys
 import math
 import pygame
-import time
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
 from copy import deepcopy
 import robot as rb
@@ -97,7 +96,6 @@ population_array = []
 for i in range(POPULATION_SIZE):
 	population_array.append(neuralNetwork.initialize_random_weights())
 
-#FF_results = [[], [], []]  # best, media, stdev
 
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
@@ -106,15 +104,11 @@ def init_new_map(walls, init_position):
 	return environment, robot
 
 
-#environment, robot = init_new_map(WALLS_FIRST_MAP, ROBOT_POSITION_FIRST_MAP)
-# drawing the environment and move robot
-#environment.draw_environment()
-#robot.robot_moving(environment.walls, DELTA_T)
-
+maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP]
+positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP]
 collision_flag = False  # Indicator of a collision
 epoch = 1
-if LOAD:
-	epoch = LOAD_EPOCH
+if LOAD:  epoch = LOAD_EPOCH
 
 while epoch <= GENETIC_EPOCHS:
 	collision_array = [] # collisions[robot][collision_level_1lvl]
@@ -123,8 +117,7 @@ while epoch <= GENETIC_EPOCHS:
 	pop_index=0
 	for current_robot in population_array:
 		print("robot: ", pop_index)
-		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP]
-		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP]
+
 
 		# initialize 3 levels
 		collision_robot_3lvl = []  # save collision for the single robot for all levels
@@ -198,9 +191,10 @@ while epoch <= GENETIC_EPOCHS:
 			score_robot_3lvl.append(score)
 			print(score)
 		#########################################################################################
-		collision_array.append(collision_robot_3lvl)
 		score_array.append(score_robot_3lvl)
+		collision_array.append(collision_robot_3lvl)
 		pop_index +=1
+
 	save.save_model_score(epoch, score_array, collision_array, POPULATION_SIZE)
 
 	# TODO parents reproduction and new offspring

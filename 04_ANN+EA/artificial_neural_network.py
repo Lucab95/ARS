@@ -1,5 +1,6 @@
 # GLAUCO
 import numpy as np
+from scipy.special import expit
 
 X, Y = 0, 1
 
@@ -23,7 +24,7 @@ class ArtificialNeuralNetwork:
         return np.random.randn(n, m)
 
     def _sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
+        return expit(x)  # 1.0 / (1.0 + np.exp(-x))
 
     def forward_propagation(self, inputs):
         hidden_layer = np.dot(inputs, self.weights_0L) + self.bias_0L
