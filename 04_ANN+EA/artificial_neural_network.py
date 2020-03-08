@@ -33,10 +33,6 @@ class ArtificialNeuralNetwork:
         outputs = self._sigmoid(outputs[0])
         return outputs
 
-    def mapping_input(self, input, input_range):  # [A,B] -> [0,1]
-        pass
-        # TODO
-
     def mapping_output(self, output, output_range):  #  [0,1] -> [A,B]
         new_output = []
         for i in range(len(output)):

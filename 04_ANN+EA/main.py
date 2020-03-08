@@ -22,9 +22,9 @@ MAX_DISTANCE_SENSOR = 50
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
-DELTA_T = .3
+DELTA_T = .15
 FPS = 200  # Frames per second
-MAP_STEPS = 1
+MAP_STEPS = 15
 
 ROBOT_DRIVE = True
 #######################################################
@@ -34,15 +34,18 @@ ROBOT_DRIVE = True
 ################# GA PROPERTIES #######################
 FITNESS_FUNCTION = 1  # TODO
 MUTATION_PROBABILITY = 0.05
-MUTATION_P_STEP = 1.5  # TODO
+MUTATION_P_STEP = 1.5
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 50
+POPULATION_SIZE = 15
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
 GENETIC_EPOCHS = 50
 
-LOAD=False
+LOAD = False
 LOAD_EPOCH = 49
+
+SCORE_INCIDENCE = 0.6
+AVOID_COLLISIONS_INCIDENCE = 1-SCORE_INCIDENCE
 #######################################################
 #######################################################
 
@@ -114,19 +117,18 @@ while epoch <= GENETIC_EPOCHS:
 	collision_array = [] # collisions[robot][collision_level_1lvl]
 	score_array = [] # score[robot][dust_1lvl]
 	print("epoch: ", epoch)
-	pop_index=0
-	for current_robot in population_array:
-		print("robot: ", pop_index)
 
+	####################### ALL POPULATION FOR 1 EPOCH #############################################
+	for pop_index, current_robot in enumerate(population_array):
+		#set title with number of epoch and robot
+		pygame.display.set_caption("Epoch: " + str(epoch) + "  Robot: " + str(pop_index))
 
-		# initialize 3 levels
 		collision_robot_3lvl = []  # save collision for the single robot for all levels
 		score_robot_3lvl = []  # save score for the single robot but for all levels
 
-		#initialize weights for current robot
+		#initialize weights for current robot or load them
 		if LOAD and LOAD_EPOCH == epoch:
 			neuralNetwork.weights_0L, neuralNetwork.weights_1L = save.load_model(epoch, pop_index)
-			# print(neuralNetwork.weights_0L, "\n\n", neuralNetwork.weights_1L)
 		else:
 			neuralNetwork.weights_0L = current_robot[0]
 			neuralNetwork.weights_1L = current_robot[1]
@@ -134,10 +136,10 @@ while epoch <= GENETIC_EPOCHS:
 
 		####################### N LEVEL FOR 1 ROBOT ##############################################
 		for new_map, new_position in zip(maps_list, positions_list):
-			#change level and reset dust
+			#reset level position and dust
 			environment, robot = init_new_map(new_map, new_position)
 			dust = du.Dust(screen, DUST_SIZE)
-			collision_avoided=0
+			collision_avoided = 0
 			####################### SINGLE LEVEL ################################################
 			for steps in range(MAP_STEPS):
 				##################### MANUAL DRIVE ######################################
@@ -178,33 +180,37 @@ while epoch <= GENETIC_EPOCHS:
 				dust.update_dust(robot)
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
-				#time.sleep(0.5)
+
 				if not collided:
-					collision_avoided +=1
+					collision_avoided += 1
 			#####################################################################################
 			collision_robot_3lvl.append(collision_avoided)
-			dust_array = dust.get_dust()
-			score = 0
-			for dust in dust_array:
-				if dust[1]:
-					score += 1
+			score = dust.get_score_dust()
 			score_robot_3lvl.append(score)
 			print(score)
 		#########################################################################################
 		score_array.append(score_robot_3lvl)
 		collision_array.append(collision_robot_3lvl)
-		pop_index +=1
+	################################################################################################
 
-	save.save_model_score(epoch, score_array, collision_array, POPULATION_SIZE)
+	#get averages of score and collisions avoided
+	average_score = geneticAlgorithm.get_average_value(score_array)
+	average_collision_avoided = geneticAlgorithm.get_average_value(collision_array)
+
+	#normalize previous values
+	normalized_average_score = geneticAlgorithm.get_normalized_value(average_score, DUST_SIZE)
+	normalized_average_collision_avoided = geneticAlgorithm.get_normalized_value(average_collision_avoided, MAP_STEPS)
+
+	fitness_values = geneticAlgorithm.calculate_fitness(SCORE_INCIDENCE, AVOID_COLLISIONS_INCIDENCE, normalized_average_score, normalized_average_collision_avoided)
+
+	# save in a file
+	save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
 
 	# TODO parents reproduction and new offspring
-
-	for population in population_array:
-		print("population", population)
-
-	parents = geneticAlgorithm.select_parents(population_array, PARENTS_NUMBER)
+	parents, ordered_fitness = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array, fitness_values)
 	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
 	population_array = geneticAlgorithm.mutation_function(population_array)
 
-	# TODO save 3 ff values
 	epoch += 1
+
+# TODO draw all

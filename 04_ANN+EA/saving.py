@@ -18,16 +18,22 @@ def save_model_weight(epoch, pop, weights1, weights2):
 
 
 # Saves the score in a txt file
-def save_model_score(epoch, score, collisions, population_size):
+def save_model_score(epoch, population_size, score_array, collision_array, score_average, collision_average, score_norm, collision_norm, fitness):
     scores = []
-    print(score)
-
-    for i in range(population_size - 1):
-        string = "Robot: " + str(i) + " score: "  # str(score[i]) + " collision avoided "# + str(collision[i]) +"\n"
+    for i in range(population_size):
+        string = \
+            "Robot: " + str(i) \
+            + " | Score: " + str(score_array[i]) \
+            + " | Collision avoided: " + str(collision_array[i]) \
+            + " | Score averages: [" + str(score_average[i]) \
+            + "] | Collision avoided averages: [" + str(collision_average[i]) \
+            + "] | Score normalized: [" + str(score_norm[i]) \
+            + "] | Collision avoided normalized: [" + str(collision_norm[i]) \
+            + "] | Fitness function: [" + str(fitness[i]) \
+            + "] \n"
         scores.append(string)
-    name = "gen" + str(epoch)
-    # scores.append(score)
-    np.savetxt(("Score\\" + name + "-score.txt"), scores, fmt="%s")
+
+    np.savetxt(("Score\\" + "gen" + str(epoch) + "-score.txt"), scores, fmt="%s")
 
 
 # Load a model from a txt file

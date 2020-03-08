@@ -66,3 +66,11 @@ class Dust:
 
     def get_dust(self):
         return self.dust_list;
+
+    def get_score_dust(self):
+        dust_array = self.get_dust()
+        score = 0
+        for dust in dust_array:
+            if dust[1]:
+                score += 1
+        return score
