@@ -13,17 +13,37 @@ class GeneticAlgorithm:
         self.mutation_prob = mutation_prob
         self.mutation_prob_step = mutation_prob_step
 
-    def select_parents(self, no_parents, parent_array, fitness_array):  # truncated rank-based selection
-        array = []
-        for parent, fitness in zip(parent_array, fitness_array):
+    def calculate_fitness(self, alpha, beta, array_A, array_B):
+        fitness_array = []
+        for value_A, value_B in zip(array_A, array_B):
+            fitness = (alpha*value_A) + (beta*value_B)
+            fitness_array.append(fitness)
+        return fitness_array
+
+    def order_population_and_fitness(self, pop_array, fitness_array):
+        array, ordered_population, ordered_fitness = [], [], []
+
+        for parent, fitness in zip(pop_array, fitness_array):
             array.append([parent, fitness])
         sorted_array = sorted(array, key=lambda array: array[1], reverse=True)
-        sorted_array = sorted_array[0:no_parents]
-        result, ordered_fitness = [], []
+
         for element in sorted_array:
-            result.append(element[0])
+            ordered_population.append(element[0])
             ordered_fitness.append(element[1])
-        return result, ordered_fitness
+
+        return ordered_population, ordered_fitness
+
+    def select_parents(self, no_parents, parent_array):  # truncated rank-based selection
+        #array = []
+        #for parent, fitness in zip(parent_array, fitness_array):
+        #    array.append([parent, fitness])
+        #sorted_array = sorted(array, key=lambda array: array[1], reverse=True)
+        truncated_array = parent_array[0:no_parents]
+        # result, ordered_fitness = [], []
+        # for element in sorted_array:
+        #     result.append(element[0])
+        #     ordered_fitness.append(element[1])
+        return truncated_array
 
     def crossover_function(self, parent_array, pop_size, mantain):
         W0, W1 = 0, 1
@@ -71,11 +91,12 @@ class GeneticAlgorithm:
 
     def mutation_function(self, offspring):
         for ofspr in offspring:
-            for weight_matrix in ofspr:
-                for i in range(len(weight_matrix)):
-                    for j in range(len(weight_matrix[0])):
-                        if random.random() <= self.mutation_prob:
-                            weight_matrix[i][j] += np.random.uniform(-self.mutation_prob_step, self.mutation_prob_step)
+            if random.random() <= self.mutation_prob:
+                for weight_matrix in ofspr:
+                    for i in range(len(weight_matrix)):
+                        for j in range(len(weight_matrix[0])):
+                            if random.random() <= self.mutation_prob:
+                                weight_matrix[i][j] += np.random.uniform(-self.mutation_prob_step, self.mutation_prob_step)
         return offspring
 
     def get_average_value(self, array):
@@ -90,13 +111,6 @@ class GeneticAlgorithm:
             normal = value/top_range
             normalized_array.append(normal)
         return normalized_array
-
-    def calculate_fitness(self, alpha, beta, array_A, array_B):
-        fitness_array = []
-        for value_A, value_B in zip(array_A, array_B):
-            fitness = (alpha*value_A) + (beta*value_B)
-            fitness_array.append(fitness)
-        return fitness_array
 
     def calculate_diversity(self, population_in_all_epochs):
         diversity_array = []

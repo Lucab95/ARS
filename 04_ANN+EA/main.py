@@ -33,13 +33,13 @@ ROBOT_DRIVE = True
 #######################################################
 ################# GA PROPERTIES #######################
 CROSSOVER_PROBABILITY = 0.5
-MUTATION_PROBABILITY = 0.03
+MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
 POPULATION_SIZE = 15
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 50
+GENETIC_EPOCHS = 10
 MAP_STEPS = 1
 
 LOAD = False
@@ -177,7 +177,7 @@ while epoch <= GENETIC_EPOCHS:
 				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
 					inputs = deepcopy(robot.sensor_list)
-					# inputs.append(DELTA_T*1000) #delta time in ms
+					inputs.append(DELTA_T*1000) #delta time in ms
 					output = neuralNetwork.forward_propagation(inputs)
 					robot.motor = neuralNetwork.mapping_output_velocity(output, robot.max_velocity)
 				#########################################################################
@@ -208,17 +208,20 @@ while epoch <= GENETIC_EPOCHS:
 	#normalize previous values
 	normalized_average_score = geneticAlgorithm.get_normalized_value(average_score, DUST_SIZE)
 	normalized_average_collision_avoided = geneticAlgorithm.get_normalized_value(average_collision_avoided, MAP_STEPS)
-
+	# get fitness values
 	fitness_values = geneticAlgorithm.calculate_fitness(SCORE_INCIDENCE, AVOID_COLLISIONS_INCIDENCE, normalized_average_score, normalized_average_collision_avoided)
+
+	# save in a file
+	save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
+
+	# order stuff
+	population_array, fitness_values = geneticAlgorithm.order_population_and_fitness(population_array, fitness_values)
 
 	performance_FF[0].append(fitness_values[0])
 	performance_FF[1].append(stats.mean(fitness_values))
 	performance_FF[2].append(stats.stdev(fitness_values))
 
-	# save in a file
-	save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
-
-	parents, ordered_fitness = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array, fitness_values)
+	parents = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array)
 	crossover_array = geneticAlgorithm.crossover_function(parents, POPULATION_SIZE, MANTAIN_PARENTS)
 	mutated_array = geneticAlgorithm.mutation_function(crossover_array)
 	if MANTAIN_PARENTS:
