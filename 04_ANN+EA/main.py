@@ -3,13 +3,14 @@ import math
 import pygame
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
 from copy import deepcopy
+import statistics as stats
 import robot as rb
 import dust as du
 import environment as env
 import genetic_algorithm as ga
 import artificial_neural_network as nna
 import saving as save
-L, R = 0, 1
+import plotting as plot
 X, Y, TH = 0, 1, 2
 
 #######################################################
@@ -24,7 +25,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
 DELTA_T = .15
 FPS = 200  # Frames per second
-MAP_STEPS = 50
+MAP_STEPS = 100
 
 ROBOT_DRIVE = True
 #######################################################
@@ -33,13 +34,14 @@ ROBOT_DRIVE = True
 #######################################################
 ################# GA PROPERTIES #######################
 FITNESS_FUNCTION = 1  # TODO
+CROSSOVER_PROBABILITY = 0.5
 MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 15
+POPULATION_SIZE = 10
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 30
+GENETIC_EPOCHS = 3
 
 LOAD = False
 LOAD_EPOCH = 49
@@ -59,7 +61,7 @@ OUTPUTS_SIZE = 2
 
 #######################################################
 ############### OTHER PROPERTIES ######################
-SAVING_DIRECTORY, SCORE_DIRECTORY = "Save", "Score"
+SAVING_DIRECTORY, SCORE_DIRECTORY, IMAGES_DIRECTORY = "Save", "Score", "Images"
 
 ROBOT_POSITION_FIRST_MAP = [90, 90, math.radians(0)]
 WALLS_FIRST_MAP = 	[
@@ -85,6 +87,7 @@ WALLS_SECOND_MAP = 	[
 
 save.create_directory(SAVING_DIRECTORY)
 save.create_directory(SCORE_DIRECTORY)
+save.create_directory(IMAGES_DIRECTORY)
 
 # == INIT GAME ==
 pygame.init()  # Initializing library
@@ -93,12 +96,15 @@ FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
 
 # == INIT NNA, GA AND POPULATION ==
 neuralNetwork = nna.ArtificialNeuralNetwork(INPUTS_SIZE, HIDDEN_LAYER_SIZE, OUTPUTS_SIZE)
-geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, MUTATION_PROBABILITY, MUTATION_P_STEP)
+geneticAlgorithm = ga.GeneticAlgorithm(CROSSOVER_PROBABILITY, MUTATION_PROBABILITY, MUTATION_P_STEP)
+performance_FF = [[],[],[]] # best, mean, stdev
 
+population_in_all_epochs = []
 population_array = []
 for i in range(POPULATION_SIZE):
 	population_array.append(neuralNetwork.initialize_random_weights())
 
+population_in_all_epochs.append(population_array)
 
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
@@ -203,6 +209,10 @@ while epoch <= GENETIC_EPOCHS:
 
 	fitness_values = geneticAlgorithm.calculate_fitness(SCORE_INCIDENCE, AVOID_COLLISIONS_INCIDENCE, normalized_average_score, normalized_average_collision_avoided)
 
+	performance_FF[0].append(fitness_values[0])
+	performance_FF[1].append(stats.mean(fitness_values))
+	performance_FF[2].append(stats.stdev(fitness_values))
+
 	# save in a file
 	save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
 
@@ -211,7 +221,12 @@ while epoch <= GENETIC_EPOCHS:
 	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
 	population_array = geneticAlgorithm.mutation_function(population_array)
 
+	population_in_all_epochs.append(population_array)
+
 	epoch += 1
 
-pass
+diversity_array = geneticAlgorithm.calculate_diversity(population_in_all_epochs)
+
 # write down best, mean, stdev
+plot.plotting_performance(performance_FF)
+plot.plotting_diversity(performance_FF[0], diversity_array)

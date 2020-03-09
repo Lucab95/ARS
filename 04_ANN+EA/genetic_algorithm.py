@@ -1,16 +1,16 @@
 import numpy as np
 import random
 import statistics as stats
+import itertools
 
 X, Y, Z = 0, 1, 2
 
 class GeneticAlgorithm:
 
-    def __init__(self, function_name, mutation_prob, mutation_prob_step, crossover_prob = 0.5):
-        self.fitness_function = function_name
+    def __init__(self, crossover_prob, mutation_prob, mutation_prob_step, ):
+        self.crossover_prob = crossover_prob
         self.mutation_prob = mutation_prob
         self.mutation_prob_step = mutation_prob_step
-        self.crossover_prob = crossover_prob
 
     def select_parents(self, no_parents, parent_array, fitness_array):  # truncated rank-based selection
         array = []
@@ -94,6 +94,23 @@ class GeneticAlgorithm:
             fitness = (alpha*value_A) + (beta*value_B)
             fitness_array.append(fitness)
         return fitness_array
+
+    def calculate_diversity(self, population_in_all_epochs):
+        diversity_array = []
+        # get every generation
+        for generation in population_in_all_epochs:
+            #create an array of every combination of people
+            tupled_generation = list(itertools.combinations(generation, 2))
+            #for every tuple
+            for tuple in tupled_generation:
+                pop_A = tuple[0]
+                pop_B = tuple[1]
+                diff_W0 = pop_A[0]
+
+
+
+
+        return diversity_array
 
     #def calculate_fitness(self, alpha, beta, array_A, array_B):
     #    sorted_outputs = sorted(outputs, key=lambda output: output[Z])

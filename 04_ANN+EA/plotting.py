@@ -36,15 +36,15 @@ def PlottingResults(values, x_list, y_list, function):
         DrawMarker(ax, dot[0], dot[1], "", False)
     v.show()
 
-def PlottingPerformance(Z_list):
+def plotting_performance(Z_list):
     best, mean, stdev = Z_list[0], Z_list[1], Z_list[2]
 
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111)
 
     # Set the axis lables
-    ax.set_xlabel('Number epochs', fontsize=18)
-    ax.set_ylabel('Means Fitness Function', fontsize=18)
+    ax.set_xlabel('Generations', fontsize=18)
+    ax.set_ylabel('Fitness', fontsize=18)
     xaxis = np.array(range(0, len(Z_list[0])))
 
     # Line color for error bar
@@ -72,4 +72,38 @@ def PlottingPerformance(Z_list):
     # Draw a grid for the graph
     ax.grid(color='lightgrey', linestyle='-')
     ax.set_facecolor('w')
+    plt.savefig('Images\\performance.png')
+    plt.show()
+
+def plotting_diversity(best_performance, all_pop_all_epochs):
+
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111)
+
+    # Set the axis lables
+    ax.set_xlabel('Generations', fontsize=18)
+    ax.set_ylabel('Diversity', fontsize=18)
+    #ax.set_ylabel('Performance', fontsize=18)
+    xaxis = np.array(range(0, len(best_performance)))
+
+    # Line color for error bar
+    color_best = 'red'
+    color_diversity = 'blue'
+
+    # Line style for each dataset
+    lineStyle_best = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
+    lineStyle_mean = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
+
+    # Create an error bar for each dataset
+    line_best = ax.errorbar(xaxis, best, **lineStyle_best, color=color_best, label='best')
+    line_mean = ax.errorbar(xaxis, mean, yerr=stdev, **lineStyle_mean, color=color_diversity, label='mean')
+
+    # Draw a legend bar
+    plt.legend(handles=[line_best, line_mean], loc='upper right')
+
+    # Draw a grid for the graph
+    ax.grid(color='lightgrey', linestyle='-')
+    ax.set_facecolor('w')
+    plt.savefig('Images\\diversity.png')
     plt.show()
