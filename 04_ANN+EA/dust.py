@@ -2,7 +2,7 @@ import pygame
 import shapely
 from shapely.geometry import Point
 from shapely import affinity
-
+from copy import deepcopy
 
 X, Y, TH = 0, 1, 2
 class Dust:
@@ -50,7 +50,7 @@ class Dust:
         robot_center = Point(robot.position[X], robot.position[Y]).buffer(1)
         robot_radius = int(0.5*robot.axis_length)
         robot_shape = shapely.affinity.scale(robot_center, robot_radius, robot_radius)
-        dust_array = self.get_dust()
+        dust_array = deepcopy(self.dust_list)
         for idx, dustx in enumerate(dust_array):
             point = Point(dustx[0][0], dustx[0][1])
 
@@ -64,11 +64,8 @@ class Dust:
         # print (index)
         self.dust_list[index][1] = True
 
-    def get_dust(self):
-        return self.dust_list;
-
     def get_score_dust(self):
-        dust_array = self.get_dust()
+        dust_array = deepcopy(self.dust_list)
         score = 0
         for dust in dust_array:
             if dust[1]:

@@ -24,9 +24,9 @@ MAX_DISTANCE_SENSOR = 50
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
-DELTA_T = .15
+DELTA_T = .1
 FPS = 200  # Frames per second
-ROBOT_DRIVE = False
+ROBOT_DRIVE = True
 #######################################################
 #######################################################
 
@@ -37,9 +37,9 @@ MUTATION_PROBABILITY = 0.03
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 40
+POPULATION_SIZE = 15
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 50
+GENETIC_EPOCHS = 10
 MAP_STEPS = 1
 
 LOAD = False
@@ -100,22 +100,26 @@ performance_FF = [[],[],[]] # best, mean, stdev
 
 population_in_all_epochs = []
 population_array = []
+# init random parents
 for i in range(POPULATION_SIZE):
 	population_array.append(neuralNetwork.initialize_random_weights())
 
+# add population epoch 0
 population_in_all_epochs.append(population_array)
 
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
 	robot = rb.Robot(screen, 2 * ROBOT_RADIUS, MAX_VELOCITY, MAX_DISTANCE_SENSOR)
 	robot.position = init_position
+	robot.use_sensors(walls)
 	return environment, robot
 
 
 maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP]
 positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP]
 collision_flag = False  # Indicator of a collision
-epoch = 1
+
+epoch = 0
 if LOAD:  epoch = LOAD_EPOCH
 
 while epoch <= GENETIC_EPOCHS:
@@ -135,8 +139,8 @@ while epoch <= GENETIC_EPOCHS:
 		if LOAD and LOAD_EPOCH == epoch:
 			neuralNetwork.weights_0L, neuralNetwork.weights_1L = save.load_model(epoch, pop_index)
 		else:
-			neuralNetwork.weights_0L = current_robot[0]
-			neuralNetwork.weights_1L = current_robot[1]
+			neuralNetwork.weights_0L = deepcopy(current_robot[0])
+			neuralNetwork.weights_1L = deepcopy(current_robot[1])
 			save.save_model_weight(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L)
 
 		####################### N LEVEL FOR 1 ROBOT ##############################################
@@ -192,7 +196,6 @@ while epoch <= GENETIC_EPOCHS:
 			collision_robot_3lvl.append(collision_avoided)
 			score = dust.get_score_dust()
 			score_robot_3lvl.append(score)
-			print(score)
 		#########################################################################################
 		score_array.append(score_robot_3lvl)
 		collision_array.append(collision_robot_3lvl)
@@ -216,12 +219,17 @@ while epoch <= GENETIC_EPOCHS:
 	save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
 
 	parents, ordered_fitness = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array, fitness_values)
-	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
-	population_array = geneticAlgorithm.mutation_function(population_array)
+	crossover_array = geneticAlgorithm.crossover_function(parents, POPULATION_SIZE, MANTAIN_PARENTS)
+	mutated_array = geneticAlgorithm.mutation_function(crossover_array)
+	if MANTAIN_PARENTS:
+		all_individuals = parents + mutated_array
+		population_array = deepcopy(all_individuals)
+	else:
+		population_array = deepcopy(mutated_array)
 
 	population_in_all_epochs.append(population_array)
-
 	epoch += 1
+
 
 diversity_array = geneticAlgorithm.calculate_diversity(population_in_all_epochs)
 

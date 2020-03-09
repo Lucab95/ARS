@@ -2,6 +2,7 @@ import numpy as np
 import random
 import statistics as stats
 import itertools
+from copy import deepcopy
 
 X, Y, Z = 0, 1, 2
 
@@ -57,6 +58,8 @@ class GeneticAlgorithm:
                     else:
                         new_W0[i][j] = W0_A[i][j]
 
+            for i in range(len(W1_A)):
+                for j in range(len(W1_A[0])):
                     if random.random() <= self.mutation_prob:
                         new_W1[i][j] = 0.5 * (W1_A[i][j] + W1_B[i][j])
                     else:
@@ -101,19 +104,19 @@ class GeneticAlgorithm:
         # get every generation
         for generation in population_in_all_epochs:
             total_diversity = 0
-            sum_diversity_w0, sum_diversity_w1 = 0, 0
 
             #create an array of every combination of people
             tupled_generation = list(itertools.combinations(generation, 2))
 
             #for every tuple
             for tuple in tupled_generation:
-                pop_A = tuple[0]
-                pop_B = tuple[1]
+                pop_A = deepcopy(tuple[0])
+                pop_B = deepcopy(tuple[1])
                 distance_matrix_W0 = np.absolute(np.subtract(pop_A[0], pop_B[0]))
                 distance_matrix_W1 = np.absolute(np.subtract(pop_A[1], pop_B[1]))
 
                 #sum every distance element
+                sum_diversity_w0, sum_diversity_w1 = 0, 0
                 for i in range(len(distance_matrix_W0)):
                     for j in range(len(distance_matrix_W0[0])):
                         sum_diversity_w0 += distance_matrix_W0[i][j]
@@ -122,8 +125,7 @@ class GeneticAlgorithm:
                     for j in range(len(distance_matrix_W1[0])):
                         sum_diversity_w1 += distance_matrix_W1[i][j]
 
-                sum_total = sum_diversity_w0 + sum_diversity_w1
-                total_diversity += sum_total
+                total_diversity += (sum_diversity_w0 + sum_diversity_w1)
 
             diversity_array.append(total_diversity)
 
