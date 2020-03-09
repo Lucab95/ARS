@@ -6,10 +6,11 @@ X, Y, Z = 0, 1, 2
 
 class GeneticAlgorithm:
 
-    def __init__(self, function_name, mutation_prob, mutation_prob_step):
+    def __init__(self, function_name, mutation_prob, mutation_prob_step, crossover_prob = 0.5):
         self.fitness_function = function_name
         self.mutation_prob = mutation_prob
         self.mutation_prob_step = mutation_prob_step
+        self.crossover_prob = crossover_prob
 
     def select_parents(self, no_parents, parent_array, fitness_array):  # truncated rank-based selection
         array = []
@@ -51,8 +52,15 @@ class GeneticAlgorithm:
 
             for i in range(len(W0_A)):
                 for j in range(len(W0_A[0])):
-                    new_W0[i][j] = 0.5 * (W0_A[i][j] + W0_B[i][j])
-                    new_W1[i][j] = 0.5 * (W1_A[i][j] + W1_B[i][j])
+                    if random.random() <= self.mutation_prob:
+                        new_W0[i][j] = 0.5 * (W0_A[i][j] + W0_B[i][j])
+                    else:
+                        new_W0[i][j] = W0_A[i][j]
+
+                    if random.random() <= self.mutation_prob:
+                        new_W1[i][j] = 0.5 * (W1_A[i][j] + W1_B[i][j])
+                    else:
+                        new_W1[i][j] = W1_A[i][j]
 
             offspring.append([new_W0, new_W1])
 
@@ -63,7 +71,8 @@ class GeneticAlgorithm:
             for weight_matrix in ofspr:
                 for i in range(len(weight_matrix)):
                     for j in range(len(weight_matrix[0])):
-                        weight_matrix[i][j] += np.random.uniform(-self.mutation_prob_step, self.mutation_prob_step)
+                        if random.random() <= self.mutation_prob:
+                            weight_matrix[i][j] += np.random.uniform(-self.mutation_prob_step, self.mutation_prob_step)
         return offspring
 
     def get_average_value(self, array):

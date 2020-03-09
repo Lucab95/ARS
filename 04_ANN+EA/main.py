@@ -24,7 +24,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
 DELTA_T = .15
 FPS = 200  # Frames per second
-MAP_STEPS = 15
+MAP_STEPS = 50
 
 ROBOT_DRIVE = True
 #######################################################
@@ -34,17 +34,17 @@ ROBOT_DRIVE = True
 ################# GA PROPERTIES #######################
 FITNESS_FUNCTION = 1  # TODO
 MUTATION_PROBABILITY = 0.05
-MUTATION_P_STEP = 1.5
+MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
 POPULATION_SIZE = 15
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 50
+GENETIC_EPOCHS = 30
 
 LOAD = False
 LOAD_EPOCH = 49
 
-SCORE_INCIDENCE = 0.6
+SCORE_INCIDENCE = 0.5
 AVOID_COLLISIONS_INCIDENCE = 1-SCORE_INCIDENCE
 #######################################################
 #######################################################
@@ -213,4 +213,5 @@ while epoch <= GENETIC_EPOCHS:
 
 	epoch += 1
 
-# TODO draw all
+pass
+# write down best, mean, stdev
