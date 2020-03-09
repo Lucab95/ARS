@@ -103,3 +103,41 @@ def plotting_diversity(diversity_array):
     ax.set_facecolor('w')
     plt.savefig('Images\\diversity.png')
     plt.show()
+
+def plotting_test(f_map1, f_map2, f_map3, f_map4):
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111)
+
+    # Set the axis lables
+    ax.set_xlabel('1, 10, 50 Generations', fontsize=18)
+    ax.set_ylabel('Fitness', fontsize=18)
+    xaxis = np.array([1,2,3])
+    print(xaxis)
+    # Line color for error bar
+    color_map1 = 'blue'
+    color_map2 = 'red'
+    color_map3 = 'green'
+    color_map4 = 'yellow'
+
+    # Line style for each dataset
+    lineStyle_map1 = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
+    lineStyle_map2 = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
+    lineStyle_map3 = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
+    lineStyle_map4 = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
+
+    # Create an error bar for each dataset
+    line_map1 = ax.errorbar(xaxis, f_map1, **lineStyle_map1, color=color_map1, label='map1')
+    line_map2 = ax.errorbar(xaxis, f_map2, **lineStyle_map2, color=color_map2, label='map2')
+    line_map3 = ax.errorbar(xaxis, f_map3, **lineStyle_map3, color=color_map3, label='map3')
+    line_map4 = ax.errorbar(xaxis, f_map4, **lineStyle_map4, color=color_map4, label='map4')
+
+
+    # Draw a legend bar
+    plt.legend(handles=[line_map1, line_map2, line_map3, line_map4], loc='upper right')
+
+    # Draw a grid for the graph
+    ax.grid(color='lightgrey', linestyle='-')
+    ax.set_facecolor('w')
+    plt.savefig('Images\\final_test.png')
+    plt.show()

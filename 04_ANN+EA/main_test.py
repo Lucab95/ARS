@@ -25,7 +25,7 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
 DELTA_T = .15
 FPS = 200  # Frames per second
-MAP_STEPS = 150
+MAP_STEPS = 10
 
 ROBOT_DRIVE = True
 #######################################################
@@ -39,7 +39,7 @@ MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 10
+POPULATION_SIZE = 1
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
 GENETIC_EPOCHS = {1,10,50}
 
@@ -155,6 +155,8 @@ collision_flag = False  # Indicator of a collision
 # epoch = 1
 # if LOAD:  epoch = LOAD_EPOCH
 
+fitness_for_every_map = []
+
 for epoch in GENETIC_EPOCHS:
 	collision_array = [] # collisions[robot][collision_level_1lvl]
 	score_array = [] # score[robot][dust_1lvl]
@@ -170,7 +172,7 @@ for epoch in GENETIC_EPOCHS:
 
 		#initialize weights for current robot or load them
 		# if LOAD and LOAD_EPOCH == epoch:
-		neuralNetwork.weights_0L, neuralNetwork.weights_1L = save.load_model(epoch, pop_index)
+		neuralNetwork.weights_0L, neuralNetwork.weights_1L = save.load_model_training(epoch)
 		# print(neuralNetwork.weights_0L, neuralNetwork.weights_1L )
 		# else:
 		# 	neuralNetwork.weights_0L = current_robot[0]
@@ -185,28 +187,6 @@ for epoch in GENETIC_EPOCHS:
 			collision_avoided = 0
 			####################### SINGLE LEVEL ################################################
 			for steps in range(MAP_STEPS):
-				##################### MANUAL DRIVE ######################################
-				for event in pygame.event.get():  # Event observer
-					if event.type == pygame.QUIT:  # Exit
-						pygame.quit()
-						sys.exit(1)
-
-					if ROBOT_DRIVE == False:
-						if event.type == KEYDOWN: # Press key
-							if event.key == K_DOWN:
-								robot.ChangeMotorVelocity(L, -MOTOR_GRIP)
-								robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
-							if event.key == K_UP:
-								robot.ChangeMotorVelocity(L, MOTOR_GRIP)
-								robot.ChangeMotorVelocity(R, MOTOR_GRIP)
-							if event.key == K_LEFT:
-								robot.ChangeMotorVelocity(L, -MOTOR_GRIP)
-								robot.ChangeMotorVelocity(R, 2*MOTOR_GRIP)
-							if event.key == K_RIGHT:
-								robot.ChangeMotorVelocity(L, 2*MOTOR_GRIP)
-								robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
-				#########################################################################
-
 				##################### ROBOT DRIVE #######################################
 				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
@@ -237,19 +217,23 @@ for epoch in GENETIC_EPOCHS:
 	################################################################################################
 
 	#get averages of score and collisions avoided
-	average_score = geneticAlgorithm.get_average_value(score_array)
-	average_collision_avoided = geneticAlgorithm.get_average_value(collision_array)
+	#average_score = geneticAlgorithm.get_average_value(score_array)
+	#average_collision_avoided = geneticAlgorithm.get_average_value(collision_array)
 
 	#normalize previous values
-	normalized_average_score = geneticAlgorithm.get_normalized_value(average_score, DUST_SIZE)
-	normalized_average_collision_avoided = geneticAlgorithm.get_normalized_value(average_collision_avoided, MAP_STEPS)
+	fitnes_one_gen = []
+	for score_element, collision_avoided_element in zip(score_array,collision_array):
+		normalized_average_score = geneticAlgorithm.get_normalized_value(score_element, DUST_SIZE)
+		normalized_average_collision_avoided = geneticAlgorithm.get_normalized_value(collision_avoided_element, MAP_STEPS)
+		fitness_values = geneticAlgorithm.calculate_fitness(SCORE_INCIDENCE, AVOID_COLLISIONS_INCIDENCE, normalized_average_score, normalized_average_collision_avoided)
+		fitnes_one_gen = deepcopy(fitness_values)
 
-	fitness_values = geneticAlgorithm.calculate_fitness(SCORE_INCIDENCE, AVOID_COLLISIONS_INCIDENCE, normalized_average_score, normalized_average_collision_avoided)
-	ordered_fitness = sorted(fitness_values, key=lambda output: output, reverse=True)
-	performance_FF[0].append(ordered_fitness[0])
-	print("values are", ordered_fitness)
-	performance_FF[1].append(stats.mean(ordered_fitness))
-	performance_FF[2].append(stats.stdev(ordered_fitness))
+	fitness_for_every_map.append(fitnes_one_gen)
+	#ordered_fitness = sorted(fitness_values, key=lambda output: output, reverse=True)
+	#performance_FF[0].append(ordered_fitness[0])
+	#print("values are", ordered_fitness)
+	# performance_FF[1].append(stats.mean(ordered_fitness))
+	# performance_FF[2].append(stats.stdev(ordered_fitness))
 
 	# save in a file
 	# save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
@@ -263,6 +247,16 @@ for epoch in GENETIC_EPOCHS:
 # diversity_array = geneticAlgorithm.calculate_diversity(population_in_all_epochs)
 
 # write down best, mean, stdev
-print(performance_FF)
-plot.plotting_performance(performance_FF)
+f_map1, f_map2, f_map3, f_map4 = [], [], [], []
+for generation in fitness_for_every_map:
+	f_map1.append(generation[0])
+	f_map2.append(generation[1])
+	f_map3.append(generation[2])
+	f_map4.append(generation[3])
+
+print(f_map1)
+print(f_map2)
+print(f_map3)
+print(f_map4)
+plot.plotting_test(f_map1, f_map2, f_map3, f_map4)
 # plot.plotting_diversity(performance_FF[0], diversity_array)

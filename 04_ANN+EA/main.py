@@ -24,7 +24,7 @@ MAX_DISTANCE_SENSOR = 50
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
-DELTA_T = .1
+DELTA_T = 0.15
 FPS = 200  # Frames per second
 ROBOT_DRIVE = True
 #######################################################
@@ -32,15 +32,15 @@ ROBOT_DRIVE = True
 
 #######################################################
 ################# GA PROPERTIES #######################
-CROSSOVER_PROBABILITY = 0.5
+CROSSOVER_PROBABILITY = 1.0
 MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 40
+POPULATION_SIZE = 50
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 5
-MAP_STEPS = 1
+GENETIC_EPOCHS = 50
+MAP_STEPS = 100
 
 LOAD = False
 LOAD_EPOCH = 49
@@ -60,7 +60,7 @@ OUTPUTS_SIZE = 2
 
 #######################################################
 ############### OTHER PROPERTIES ######################
-SAVING_DIRECTORY, SCORE_DIRECTORY, IMAGES_DIRECTORY = "Save", "Score", "Images"
+SAVING_DIRECTORY, SCORE_DIRECTORY, IMAGES_DIRECTORY, BEST_DIRECTORY = "Save", "Score", "Images", "Best"
 
 ROBOT_POSITION_FIRST_MAP = [90, 90, math.radians(0)]
 WALLS_FIRST_MAP = 	[
@@ -87,6 +87,7 @@ WALLS_SECOND_MAP = 	[
 save.create_directory(SAVING_DIRECTORY)
 save.create_directory(SCORE_DIRECTORY)
 save.create_directory(IMAGES_DIRECTORY)
+save.create_directory(BEST_DIRECTORY)
 
 # == INIT GAME ==
 pygame.init()  # Initializing library
@@ -220,7 +221,8 @@ while epoch <= GENETIC_EPOCHS:
 	performance_FF[0].append(fitness_values[0])
 	performance_FF[1].append(stats.mean(fitness_values))
 	performance_FF[2].append(stats.stdev(fitness_values))
-
+	if epoch == 1 or epoch== 10 or epoch == 50:
+		save.save_model_weight_training(epoch, population_array[0][0],population_array[0][1])
 	parents = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array)
 	crossover_array = geneticAlgorithm.crossover_function(parents, POPULATION_SIZE, MANTAIN_PARENTS)
 	mutated_array = geneticAlgorithm.mutation_function(crossover_array)

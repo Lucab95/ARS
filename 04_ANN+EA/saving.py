@@ -16,10 +16,8 @@ def save_model_weight(epoch, pop, weights1, weights2):
     np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
     np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
 
-def save_model_weight_training(epoch, pop, weights1, weights2):
-    name = "gen" + str(epoch) + " " + str(pop)
-    np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
-    np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
+
+
 
 # Saves the score in a txt file
 def save_model_score(epoch, population_size, score_array, collision_array, score_average, collision_average, score_norm, collision_norm, fitness):
@@ -46,6 +44,22 @@ def load_model(epoch, pop):
         name = "gen" + str(epoch) + " " + str(pop)
         w1 = np.loadtxt((("Save\\" + name + "-w1.txt")))
         w2 = np.loadtxt(("Save\\" + name + "-w2.txt"))
+    except:
+        print("The indicated model doesn't exist!")
+        exit(1)
+    return w1, w2
+
+def save_model_weight_training(epoch, weights1, weights2):
+    name = "gen" + str(epoch)+ " best"
+    np.savetxt(("Best\\" + name + "-w1.txt"), weights1, fmt="%s")
+    np.savetxt(("Best\\" + name + "-w2.txt"), weights2, fmt="%s")
+
+def load_model_training(epoch):
+    try:
+        name = "gen" + str(epoch) + " best"
+        print(name)
+        w1 = np.loadtxt((("Best\\" + name + "-w1.txt")))
+        w2 = np.loadtxt(("Best\\" + name + "-w2.txt"))
     except:
         print("The indicated model doesn't exist!")
         exit(1)
