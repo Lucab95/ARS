@@ -37,9 +37,9 @@ MUTATION_PROBABILITY = 0.05
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 15
+POPULATION_SIZE = 40
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 10
+GENETIC_EPOCHS = 5
 MAP_STEPS = 1
 
 LOAD = False
@@ -238,4 +238,4 @@ diversity_array = geneticAlgorithm.calculate_diversity(population_in_all_epochs)
 
 # write down best, mean, stdev
 plot.plotting_performance(performance_FF)
-plot.plotting_diversity(performance_FF[0], diversity_array)
+plot.plotting_diversity(diversity_array)

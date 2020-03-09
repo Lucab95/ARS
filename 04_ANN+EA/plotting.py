@@ -75,7 +75,7 @@ def plotting_performance(Z_list):
     plt.savefig('Images\\performance.png')
     plt.show()
 
-def plotting_diversity(best_performance, diversity_array):
+def plotting_diversity(diversity_array):
 
 
     fig = plt.figure(figsize=(10, 8))
@@ -84,24 +84,19 @@ def plotting_diversity(best_performance, diversity_array):
     # Set the axis lables
     ax.set_xlabel('Generations', fontsize=18)
     ax.set_ylabel('Diversity', fontsize=18)
-    #ax.set_ylabel('Performance', fontsize=18)
-    xaxis_best = np.array(range(1, len(diversity_array)))
     xaxis_diversity = np.array(range(0, len(diversity_array)))
 
     # Line color for error bar
-    color_best = 'red'
     color_diversity = 'blue'
 
     # Line style for each dataset
-    lineStyle_best      = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
     lineStyle_diversity = {"linestyle": "-", "linewidth": 2, "markeredgewidth": 2, "elinewidth": 2, "capsize": 3}
 
     # Create an error bar for each dataset
-    line_best = ax.errorbar(xaxis_best, best_performance, **lineStyle_best, color=color_best, label='best')
-    line_mean = ax.errorbar(xaxis_diversity, diversity_array, **lineStyle_diversity, color=color_diversity, label='mean')
+    line_diversity = ax.errorbar(xaxis_diversity, diversity_array, **lineStyle_diversity, color=color_diversity, label='diversity')
 
     # Draw a legend bar
-    plt.legend(handles=[line_best, line_mean], loc='upper right')
+    plt.legend(handles=[line_diversity], loc='upper right')
 
     # Draw a grid for the graph
     ax.grid(color='lightgrey', linestyle='-')
