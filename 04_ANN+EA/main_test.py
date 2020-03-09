@@ -1,16 +1,17 @@
 import sys
-import os
 import math
-import numpy as np
 import pygame
-import time
 from pygame.locals import KEYDOWN, K_DOWN, K_UP, K_LEFT, K_RIGHT
+from copy import deepcopy
+import statistics as stats
 import robot as rb
 import dust as du
 import environment as env
 import genetic_algorithm as ga
 import artificial_neural_network as nna
-
+import saving as save
+import plotting as plot
+X, Y, TH = 0, 1, 2
 
 #######################################################
 ############### GAME PROPERTIES #######################
@@ -18,13 +19,13 @@ SIZE_SCREEN = width, height = 1000, 700
 DUST_SIZE = 400
 COLOR_SCREEN = 255,255,255
 COLOR_ENVIROMENT = 90, 90, 255
-MAX_DISTANCE_SENSOR = 40
+MAX_DISTANCE_SENSOR = 50
 MAX_VELOCITY = 100
 MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
-DELTA_T = .01
+DELTA_T = .15
 FPS = 200  # Frames per second
-MAP_STEPS = 1
+MAP_STEPS = 150
 
 ROBOT_DRIVE = True
 #######################################################
@@ -33,93 +34,113 @@ ROBOT_DRIVE = True
 #######################################################
 ################# GA PROPERTIES #######################
 FITNESS_FUNCTION = 1  # TODO
+CROSSOVER_PROBABILITY = 0.5
 MUTATION_PROBABILITY = 0.05
-MUTATION_P_STEP = 1.5  # TODO
+MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 50
+POPULATION_SIZE = 10
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = {0,9,49}
+GENETIC_EPOCHS = {1,10,50}
 
-LOAD=False
-# GENERATION THAT HAS TO BE EXECUTED
-EPOCH = 49
+LOAD = False
+LOAD_EPOCH = 49
 
-
+SCORE_INCIDENCE = 0.5
+AVOID_COLLISIONS_INCIDENCE = 1-SCORE_INCIDENCE
 #######################################################
 #######################################################
 
 #######################################################
 ################# NNA PROPERTIES ######################
-INPUTS_SIZE = 12
-HIDDEN_LAYER_SIZE = 24
+INPUTS_SIZE = 13
+HIDDEN_LAYER_SIZE = int(2*INPUTS_SIZE)
 OUTPUTS_SIZE = 2
+#######################################################
+#######################################################
 
 #######################################################
+############### OTHER PROPERTIES ######################
+SAVING_DIRECTORY, SCORE_DIRECTORY, IMAGES_DIRECTORY = "Save", "Score", "Images"
+
+ROBOT_POSITION_FIRST_MAP = [90, 90, math.radians(0)]
+WALLS_FIRST_MAP = 	[
+					[(10,10),(990,110)],   # borders
+					[(10,10),(10,690)],
+					[(990,590),(10,690)],
+					[(990,590),(990,110)],
+					]
+
+ROBOT_POSITION_SECOND_MAP = [900, 380, math.radians(270)]
+WALLS_SECOND_MAP = 	[
+					[(10,10),(990,10)],
+					[(10,10),(10,690)],
+					[(990,690),(10,690)],
+					[(990,690),(990,10)],
+					[(210,250),(790,250)],   # inside
+					[(210,250),(210,450)],
+					[(210,450),(790,450)],
+					[(790,450),(790,250)],
+					]
+
+ROBOT_POSITION_THIRD_MAP = [330, 330, math.radians(0)]
+WALLS_THIRD_MAP = [
+					[(10,10),(990,10)],
+					[(10,10),(10,690)],
+					[(990,690),(10,690)],
+					[(990,690),(990,10)],
+					[(130,690),(130,390)],   # left-top thin rectangle
+					[(130,390),(230,390)],
+					[(230,390),(230,690)],
+					[(260,250),(460,250)],   # bottom low-centered rectangle
+					[(260,150),(460,150)],
+					[(460,150),(460,250)],
+					[(260,150),(260,250)],
+					[(500, 470), (500, 570)], #right top-centered rectangle
+					[(500, 470), (700, 470)],
+					[(500, 570), (700, 570)],
+					[(700, 470), (700, 570)],
+					]
+ROBOT_POSITION_FOURTH_MAP = [450, 350, math.radians(180)]
+WALLS_FOURTH_MAP = [
+					[(10,10),(990,10)],
+					[(10,10),(10,690)],
+					[(990,690),(10,690)],
+					[(990,690),(990,10)],
+					[(10,330),(350,220)], #star
+					[(10,330),(350,440)],
+					[(350,220),(370,10)],
+					[(350,440),(370,680)],
+					[(370,10),(500,190)],
+					[(370,680),(500,470)],
+					[(500,190),(800,10)],
+					[(500,470),(800,680)],
+					[(800, 10), (630, 330)],
+					[(800, 680), (630, 330)],
+					]
 #######################################################
+#######################################################
+
+save.create_directory(SAVING_DIRECTORY)
+save.create_directory(SCORE_DIRECTORY)
+save.create_directory(IMAGES_DIRECTORY)
+
+# == INIT GAME ==
+pygame.init()  # Initializing library
+screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
+FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
 
 # == INIT NNA, GA AND POPULATION ==
 neuralNetwork = nna.ArtificialNeuralNetwork(INPUTS_SIZE, HIDDEN_LAYER_SIZE, OUTPUTS_SIZE)
-geneticAlgorithm = ga.GeneticAlgorithm(FITNESS_FUNCTION, MUTATION_PROBABILITY, MUTATION_P_STEP)
-FF_results = [[], [], []]  # best, media,stdev
+geneticAlgorithm = ga.GeneticAlgorithm(CROSSOVER_PROBABILITY, MUTATION_PROBABILITY, MUTATION_P_STEP)
+performance_FF = [[],[],[]] # best, mean, stdev
+
+population_in_all_epochs = []
 population_array = []
 for i in range(POPULATION_SIZE):
 	population_array.append(neuralNetwork.initialize_random_weights())
 
-print(population_array[0])
-
-# == INIT GAME ==
-L, R = 0, 1
-X, Y, TH = 0, 1, 2
-collision_flag = False  # Indicator of a collision
-
-
-pygame.init()  # Initializing library
-
-screen = pygame.display.set_mode(SIZE_SCREEN)  # Initializing screen
-FPSCLOCK = pygame.time.Clock()  # Refreshing screen rate
-
-ROBOT_POSITION_FIRST_MAP = [90, 90, math.radians(0)]
-WALLS_FIRST_MAP = 	[
-					[(30, 30), (970, 30)], [(970, 30), (970, 670)], [(970, 670), (30, 670)], [(30, 670),  (30, 30)], #borders
-					[(200, 200), (800, 200)],
-					[(200, 500), (800, 500)],
-					[(200, 200), (200, 500)],
-					[(800, 200), (800, 500)]
-					]
-
-ROBOT_POSITION_SECOND_MAP = [200, 610, math.radians(120)]
-WALLS_SECOND_MAP = 	[
-					[(30, 30), (970, 30)], [(970, 30), (970, 670)], [(970, 670), (30, 670)], [(30, 670), (30, 30)],  # borders
-					[(200, 200), (800, 200)],
-					[(200, 200), (500, 500)],
-					[(800, 200), (500, 500)],
-					]
-
-ROBOT_POSITION_THIRD_MAP = [600, 100, math.radians(-90)]
-WALLS_THIRD_MAP = 	[
-					[(30, 30), (970, 30)], [(970, 30), (970, 670)], [(970, 670), (30, 670)], [(30, 670), (30, 30)],  # borders
-					[(200, 200), (800, 200)],
-					[(200, 200), (600, 600)],
-					[(800, 200), (600, 600)],
-					[(200, 200), (800, 200)],
-					[(200, 500), (800, 500)],
-					[(200, 200), (200, 500)],
-					[(800, 200), (800, 500)]
-					]
-
-SAVING_DIRECTORY = "Save"
-SCORE_DIRECTORY = "Score"
-def create_directory(dir): #function to create directories required if they don't exist
-	try:
-		os.mkdir(dir)
-	except OSError:
-		print("Creation of the directory %s failed" % dir)
-	else:
-		print("Successfully created the directory %s " % dir)
-
-create_directory(SAVING_DIRECTORY)
-create_directory(SCORE_DIRECTORY)
+population_in_all_epochs.append(population_array)
 
 def init_new_map(walls, init_position):
 	environment = env.Environment(screen, COLOR_ENVIROMENT, walls)
@@ -128,77 +149,48 @@ def init_new_map(walls, init_position):
 	return environment, robot
 
 
-# Saves the model in a txt file
-def saveModelWeight(epoch, pop, weights1, weights2):
-	name = "gen" + str(epoch) + " " + str(pop)
-	np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
-	np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
+maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP, WALLS_FOURTH_MAP]
+positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP, ROBOT_POSITION_FOURTH_MAP]
+collision_flag = False  # Indicator of a collision
+# epoch = 1
+# if LOAD:  epoch = LOAD_EPOCH
 
-def saveModelScore(epoch, score,collision):
-	scores = []
-	print(score)
-
-	for i in range(POPULATION_SIZE-1):
-		string = "Robot: "+str(i)+" score: " # str(score[i]) + " collision avoided "# + str(collision[i]) +"\n"
-		scores.append(string)
-	name = "gen" + str(epoch)
-	# scores.append(score)
-	np.savetxt(("Score\\" + name + "-score.txt"), scores , fmt="%s")
-
-
-# Load a model from a txt file
-def loadModel(epoch,pop):
-	try:
-		name = "gen" + str(epoch) + " " + str(pop)
-		w1 = np.loadtxt((("Save\\" + name + "-w1.txt")))
-		w2 = np.loadtxt(("Save\\" + name + "-w2.txt"))
-	except:
-		print("The indicated model doesn't exist!")
-		time.sleep(2)
-		exit(1)
-	return w1, w2
-
-# init environment and robot
-environment, robot = init_new_map(WALLS_FIRST_MAP, ROBOT_POSITION_FIRST_MAP)
-# drawing the environment and move robot
-environment.draw_environment()
-robot.robot_moving(environment.walls, DELTA_T)
-epoch = 0
 for epoch in GENETIC_EPOCHS:
-	# TODO parents reproduction and new offspring
-	collision_array = [] # collisions[robot][collision_level]
-	score_array = [] # score[robot][dust_lvl]
-	print("epoch", epoch)
-	pop_index=0
-	for current_robot in population_array:
-		print("robot", pop_index)
-		# initialize 3 levels
+	collision_array = [] # collisions[robot][collision_level_1lvl]
+	score_array = [] # score[robot][dust_1lvl]
+	print("epoch: ", epoch)
+	####################### ALL POPULATION FOR 1 EPOCH #############################################
+	for pop_index, current_robot in enumerate(population_array):
+		print(pop_index)
+		#set title with number of epoch and robot
+		pygame.display.set_caption("Epoch: " + str(epoch) + "  Robot: " + str(pop_index))
+
 		collision_robot_3lvl = []  # save collision for the single robot for all levels
 		score_robot_3lvl = []  # save score for the single robot but for all levels
-		maps_list = [WALLS_FIRST_MAP, WALLS_SECOND_MAP, WALLS_THIRD_MAP]
-		positions_list = [ROBOT_POSITION_FIRST_MAP, ROBOT_POSITION_SECOND_MAP, ROBOT_POSITION_THIRD_MAP]
 
-		robot_array = []
-		#initialize weights for current robot
+		#initialize weights for current robot or load them
 		# if LOAD and LOAD_EPOCH == epoch:
-		neuralNetwork.weights_0L, neuralNetwork.weights_1L = loadModel(epoch, pop_index)
-			# print(neuralNetwork.weights_0L, "\n\n", neuralNetwork.weights_1L)
+		neuralNetwork.weights_0L, neuralNetwork.weights_1L = save.load_model(epoch, pop_index)
+		# print(neuralNetwork.weights_0L, neuralNetwork.weights_1L )
 		# else:
-		# 		# 	neuralNetwork.weights_0L = current_robot[0]
-		# 		# 	neuralNetwork.weights_1L = current_robot[1]
-		# saveModelWeight(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L)
-		#start game for current robot
+		# 	neuralNetwork.weights_0L = current_robot[0]
+		# 	neuralNetwork.weights_1L = current_robot[1]
+		# 	# save.save_model_weight(epoch, pop_index, neuralNetwork.weights_0L, neuralNetwork.weights_1L)
+
+		####################### N LEVEL FOR 1 ROBOT ##############################################
 		for new_map, new_position in zip(maps_list, positions_list):
-			#change level and reset dust
+			#reset level position and dust
 			environment, robot = init_new_map(new_map, new_position)
 			dust = du.Dust(screen, DUST_SIZE)
-			collision_avoided=0
-			# init game loop
+			collision_avoided = 0
+			####################### SINGLE LEVEL ################################################
 			for steps in range(MAP_STEPS):
+				##################### MANUAL DRIVE ######################################
 				for event in pygame.event.get():  # Event observer
 					if event.type == pygame.QUIT:  # Exit
 						pygame.quit()
 						sys.exit(1)
+
 					if ROBOT_DRIVE == False:
 						if event.type == KEYDOWN: # Press key
 							if event.key == K_DOWN:
@@ -213,14 +205,16 @@ for epoch in GENETIC_EPOCHS:
 							if event.key == K_RIGHT:
 								robot.ChangeMotorVelocity(L, 2*MOTOR_GRIP)
 								robot.ChangeMotorVelocity(R, -MOTOR_GRIP)
+				#########################################################################
 
+				##################### ROBOT DRIVE #######################################
 				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
-					output = neuralNetwork.forward_propagation(robot.sensor_list)
+					inputs = deepcopy(robot.sensor_list)
+					inputs.append(DELTA_T*1000) #delta time in ms
+					output = neuralNetwork.forward_propagation(inputs)
 					robot.motor = neuralNetwork.mapping_output_velocity(output, robot.max_velocity)
-					#print("SENSORS: ", robot.sensor_list)
-					#print("OUTPUTS: ", output)
-					#print("VELOCITY: ", robot.motor)
+				#########################################################################
 
 				# Update screen, robot and environment
 				screen.fill(COLOR_SCREEN)  # Background screen
@@ -229,26 +223,46 @@ for epoch in GENETIC_EPOCHS:
 				dust.update_dust(robot)
 				pygame.display.update()
 				FPSCLOCK.tick(FPS)
-				#time.sleep(0.5)
-				if not collided:
-					collision_avoided +=1
-			collision_robot_3lvl.append(collision_avoided)
-			dust_array = dust.get_dust()
-			score = 0
-			for dust in dust_array:
-				if dust[1]:
-					score += 1
-			score_robot_3lvl.append(score)
-			print(score)
-		collision_array.append(collision_robot_3lvl)
-		score_array.append(score_robot_3lvl)
-		pop_index +=1
-	# saveModelScore(epoch, score_array, collision_array)
-	# epoch +=1
-	#parents = geneticAlgorithm.select_parents(population_array, PARENTS_NUMBER
-	for population in population_array:
-		print("population", population)
-	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
-	population_array = geneticAlgorithm.mutation_function(population_array)
 
-		# TODO save 3 ff values
+				if not collided:
+					collision_avoided += 1
+			#####################################################################################
+			collision_robot_3lvl.append(collision_avoided)
+			score = dust.get_score_dust()
+			score_robot_3lvl.append(score)
+			# print(score)
+		#########################################################################################
+		score_array.append(score_robot_3lvl)
+		collision_array.append(collision_robot_3lvl)
+	################################################################################################
+
+	#get averages of score and collisions avoided
+	average_score = geneticAlgorithm.get_average_value(score_array)
+	average_collision_avoided = geneticAlgorithm.get_average_value(collision_array)
+
+	#normalize previous values
+	normalized_average_score = geneticAlgorithm.get_normalized_value(average_score, DUST_SIZE)
+	normalized_average_collision_avoided = geneticAlgorithm.get_normalized_value(average_collision_avoided, MAP_STEPS)
+
+	fitness_values = geneticAlgorithm.calculate_fitness(SCORE_INCIDENCE, AVOID_COLLISIONS_INCIDENCE, normalized_average_score, normalized_average_collision_avoided)
+	ordered_fitness = sorted(fitness_values, key=lambda output: output, reverse=True)
+	performance_FF[0].append(ordered_fitness[0])
+	print("values are", ordered_fitness)
+	performance_FF[1].append(stats.mean(ordered_fitness))
+	performance_FF[2].append(stats.stdev(ordered_fitness))
+
+	# save in a file
+	# save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
+
+	# TODO parents reproduction and new offspring
+	# parents, ordered_fitness = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array, fitness_values)
+	# population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
+	# population_array = geneticAlgorithm.mutation_function(population_array)
+	# population_in_all_epochs.append(population_array)
+
+# diversity_array = geneticAlgorithm.calculate_diversity(population_in_all_epochs)
+
+# write down best, mean, stdev
+print(performance_FF)
+plot.plotting_performance(performance_FF)
+# plot.plotting_diversity(performance_FF[0], diversity_array)

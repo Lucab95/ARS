@@ -39,7 +39,7 @@ MANTAIN_PARENTS = True
 
 POPULATION_SIZE = 15
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 10
+GENETIC_EPOCHS = 50
 MAP_STEPS = 1
 
 LOAD = False
@@ -177,7 +177,7 @@ while epoch <= GENETIC_EPOCHS:
 				if ROBOT_DRIVE:
 					# calculate Vl and Vr from [0,1]
 					inputs = deepcopy(robot.sensor_list)
-					inputs.append(DELTA_T*1000) #delta time in ms
+					# inputs.append(DELTA_T*1000) #delta time in ms
 					output = neuralNetwork.forward_propagation(inputs)
 					robot.motor = neuralNetwork.mapping_output_velocity(output, robot.max_velocity)
 				#########################################################################

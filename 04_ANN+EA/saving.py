@@ -16,6 +16,10 @@ def save_model_weight(epoch, pop, weights1, weights2):
     np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
     np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
 
+def save_model_weight_training(epoch, pop, weights1, weights2):
+    name = "gen" + str(epoch) + " " + str(pop)
+    np.savetxt(("Save\\" + name + "-w1.txt"), weights1, fmt="%s")
+    np.savetxt(("Save\\" + name + "-w2.txt"), weights2, fmt="%s")
 
 # Saves the score in a txt file
 def save_model_score(epoch, population_size, score_array, collision_array, score_average, collision_average, score_norm, collision_norm, fitness):
