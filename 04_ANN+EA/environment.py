@@ -5,7 +5,7 @@ L, R = 0, 1
 X, Y, TH = 0, 1, 2
 class Environment():
 
-	def __init__(self, screen, color, walls, size = 4):
+	def __init__(self, screen, color, walls, size = 8):
 		self.screen = screen
 		self.color = color
 		self.walls = walls

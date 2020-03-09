@@ -97,18 +97,35 @@ class GeneticAlgorithm:
 
     def calculate_diversity(self, population_in_all_epochs):
         diversity_array = []
+
         # get every generation
         for generation in population_in_all_epochs:
+            total_diversity = 0
+            sum_diversity_w0, sum_diversity_w1 = 0, 0
+
             #create an array of every combination of people
             tupled_generation = list(itertools.combinations(generation, 2))
+
             #for every tuple
             for tuple in tupled_generation:
                 pop_A = tuple[0]
                 pop_B = tuple[1]
-                diff_W0 = pop_A[0]
+                distance_matrix_W0 = np.absolute(np.subtract(pop_A[0], pop_B[0]))
+                distance_matrix_W1 = np.absolute(np.subtract(pop_A[1], pop_B[1]))
 
+                #sum every distance element
+                for i in range(len(distance_matrix_W0)):
+                    for j in range(len(distance_matrix_W0[0])):
+                        sum_diversity_w0 += distance_matrix_W0[i][j]
 
+                for i in range(len(distance_matrix_W1)):
+                    for j in range(len(distance_matrix_W1[0])):
+                        sum_diversity_w1 += distance_matrix_W1[i][j]
 
+                sum_total = sum_diversity_w0 + sum_diversity_w1
+                total_diversity += sum_total
+
+            diversity_array.append(total_diversity)
 
         return diversity_array
 

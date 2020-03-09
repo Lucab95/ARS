@@ -12,6 +12,7 @@ import artificial_neural_network as nna
 import saving as save
 import plotting as plot
 X, Y, TH = 0, 1, 2
+L, R = 0, 1
 
 #######################################################
 ############### GAME PROPERTIES #######################
@@ -25,28 +26,26 @@ MOTOR_GRIP = MAX_VELOCITY/10
 ROBOT_RADIUS = 50
 DELTA_T = .15
 FPS = 200  # Frames per second
-MAP_STEPS = 100
-
-ROBOT_DRIVE = True
+ROBOT_DRIVE = False
 #######################################################
 #######################################################
 
 #######################################################
 ################# GA PROPERTIES #######################
-FITNESS_FUNCTION = 1  # TODO
 CROSSOVER_PROBABILITY = 0.5
-MUTATION_PROBABILITY = 0.05
+MUTATION_PROBABILITY = 0.03
 MUTATION_P_STEP = 5.0
 MANTAIN_PARENTS = True
 
-POPULATION_SIZE = 10
+POPULATION_SIZE = 40
 PARENTS_NUMBER = int(POPULATION_SIZE / 5)
-GENETIC_EPOCHS = 3
+GENETIC_EPOCHS = 50
+MAP_STEPS = 1
 
 LOAD = False
 LOAD_EPOCH = 49
 
-SCORE_INCIDENCE = 0.5
+SCORE_INCIDENCE = 0.7
 AVOID_COLLISIONS_INCIDENCE = 1-SCORE_INCIDENCE
 #######################################################
 #######################################################
@@ -216,7 +215,6 @@ while epoch <= GENETIC_EPOCHS:
 	# save in a file
 	save.save_model_score(epoch, POPULATION_SIZE, score_array, collision_array, average_score, average_collision_avoided, normalized_average_score, normalized_average_collision_avoided, fitness_values)
 
-	# TODO parents reproduction and new offspring
 	parents, ordered_fitness = geneticAlgorithm.select_parents(PARENTS_NUMBER, population_array, fitness_values)
 	population_array = geneticAlgorithm.crossover_function(population_array, POPULATION_SIZE, MANTAIN_PARENTS)
 	population_array = geneticAlgorithm.mutation_function(population_array)
