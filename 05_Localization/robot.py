@@ -9,6 +9,8 @@ import numpy as np
 import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
+import data as dt
+
 L, R = 0, 1
 X, Y, TH = 0, 1, 2
 V, O = 0, 1
@@ -30,6 +32,9 @@ class Robot():
 
   def round_Y(self, value):  # INVERT Y to get a right movement and axis origin
     return int(round(self.screen.get_size()[Y] - value))
+
+  def round_point(self, point):  # INVERT Y to get a right movement and axis origin
+    return (int(round(point[X])), int(round(self.screen.get_size()[Y] - point[Y])))
 
   # force value to stay in a range[min, max]
   def set_in_range(self, limit, value):
@@ -88,6 +93,13 @@ class Robot():
           self.sensor_list[i] = point.distance(line_sensor.intersection(line_env)) - radius_robot
 
       angle += math.radians(30)
+
+  def draw_path(self, path):
+    previous_point = self.round_point(path[0][0:2])
+    for point in path:
+      current_point = self.round_point(point[0:2])
+      pygame.draw.line(self.screen, dt.REAL_PATH_COLOR, current_point, previous_point, 2)
+      previous_point = current_point
 
   def draw_robot(self, coll_flag):
     # Colours for collision

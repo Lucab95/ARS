@@ -5,16 +5,16 @@ X, Y, TH = 0, 1, 2
 
 class Environment():
 
-	def __init__(self, screen, wall_color= (0,0,0), sensor_color = (0,0,0), sensor_size = 10, wall_size = 8, margin = (10, 10)):
+	def __init__(self, screen, wall_color= (0,0,0), beacon_color = (0, 0, 0), beacon_size = 10, wall_size = 8, margin = (10, 10)):
 		self.screen = screen
 
 		self.wall_color = wall_color
 		self.wall_size = wall_size
 		self.walls = []
 
-		self.sensor_color = sensor_color
-		self.sensor_size = sensor_size
-		self.sensors = []
+		self.beacon_color = beacon_color
+		self.beacon_size = beacon_size
+		self.beacons = []
 
 		self.margin_corners = [
 			(margin[X], margin[Y]),
@@ -30,10 +30,10 @@ class Environment():
 		return tuple(map(operator.add, a, b))
 
 	def new_sensorized_wall(self, pA, pB):
-		if not pA in self.sensors:
-			self.sensors.append(pA)
-		if not pB in self.sensors:
-			self.sensors.append(pB)
+		if not pA in self.beacons:
+			self.beacons.append(pA)
+		if not pB in self.beacons:
+			self.beacons.append(pB)
 		if not [pA, pB] in self.walls:
 			self.walls.append([pA, pB])
 
@@ -61,5 +61,5 @@ class Environment():
 	def draw_environment(self):
 		for wall in self.walls:
 			pygame.draw.line(self.screen, self.wall_color, self.round_point(wall[0]), self.round_point(wall[1]), self.wall_size)
-		for sensor in self.sensors:
-			pygame.draw.circle(self.screen, self.sensor_color,  self.round_point(sensor), self.sensor_size, self.sensor_size)
+		for sensor in self.beacons:
+			pygame.draw.circle(self.screen, self.beacon_color, self.round_point(sensor), self.beacon_size, self.beacon_size)
