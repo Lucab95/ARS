@@ -9,9 +9,9 @@ import numpy as np
 import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
-
-X, Y, TH = 0, 1, 2
 L, R = 0, 1
+X, Y, TH = 0, 1, 2
+V, O = 0, 1
 inf_number = math.pow(10, 50)
 
 class Robot():
@@ -21,68 +21,38 @@ class Robot():
     self.axis_length = length
     self.max_velocity = max_velocity
     self.max_distance_sensor = max_distance_sensor
-    self.motor = [0, 0]
+    self.motion = [0, 0] # V, O
     self.color = [90, 90, 90]
     self.sensor_list = [0] * 12
-
-  # force value to stay in a range[min, max]
-  def SetInARange(self, value):
-    if value > self.max_velocity:
-      value = self.max_velocity
-    elif value < -self.max_velocity:
-      value = -self.max_velocity
-    return value
-
-  def changeXPOS(self, value):
-    self.position = [value, self.position[Y], self.position[TH]]
-  def changeYPOS(self, value):
-    self.position = [self.position[X], value, self.position[TH]]
-
-  def NewMotorVelocity(self, n_motor, value):
-    self.motor[n_motor] = self.SetInARange(value)
-
-  def ChangeMotorVelocity(self, n_motor, value):
-    next_value = self.motor[n_motor] + value
-    self.motor[n_motor] = self.SetInARange(next_value)
-
-  def _omega(self):
-    return (self.motor[R] - self.motor[L]) / self.axis_length
-
-  def _R(self):
-    diff_V = self.motor[R] - self.motor[L]
-    if diff_V == 0:
-      return inf_number #math.inf # inf_number
-    else:
-      return 0.5 * self.axis_length * (self.motor[R] + self.motor[L]) / diff_V
-
-  # NOTE: in radians
-  def _ICC(self, x, y, th):
-    return [x - self._R() * math.sin(th), y + self._R() * math.cos(th)]
-
-  # NOTE: in radians
-  def _ForwardKinematics(self, x, y, th, dT):
-    globalPos = [0, 0, 0]  # X' Y' th'
-
-    if self.motor[R] == self.motor[L]:
-      globalPos[X]  = x + self.motor[R] * math.cos(th) * dT
-      globalPos[Y]  = y + self.motor[R] * math.sin(th) * dT
-      globalPos[TH] = th
-    else:
-      odt = self._omega() * dT
-      ICC = self._ICC(x, y, th)
-      SIN_odt = math.sin(odt)
-      COS_odt = math.cos(odt)
-      globalPos[X]  = (COS_odt*(x - ICC[0]) - SIN_odt*(y - ICC[1])) + ICC[0]
-      globalPos[Y]  = (SIN_odt*(x - ICC[0]) + COS_odt*(y - ICC[1])) + ICC[1]
-      globalPos[TH] = th + odt
-
-    return globalPos
 
   def round(self, value):
     return int(round(value))
 
   def round_Y(self, value):  # INVERT Y to get a right movement and axis origin
     return int(round(self.screen.get_size()[Y] - value))
+
+  # force value to stay in a range[min, max]
+  def set_in_range(self, limit, value):
+    if value > limit:
+      value = limit
+    elif value < -limit:
+      value = -limit
+    return value
+
+  def new_motion(self, n_motion, value):
+    self.motion[n_motion] = self.set_in_range(self.max_velocity[n_motion], value)
+
+  def update_motion(self, n_motion, value):
+    next_value = self.motion[n_motion] + value
+    self.motion[n_motion] = self.set_in_range(self.max_velocity[n_motion], next_value)
+
+  def simplified_kinematics(self, position, dT):
+    next_position = deepcopy(position)  # X' Y' th'
+    next_position[X]   += dT * math.cos(position[TH]) * self.motion[V]
+    next_position[Y]   += dT * math.sin(position[TH]) * self.motion[V]
+    next_position[TH]  += dT * self.motion[O]
+
+    return next_position
 
   def use_sensors(self, wall_list):
     angle = self.position[TH]
@@ -157,25 +127,26 @@ class Robot():
       angle += math.radians(30)
 
     # set motor labels
-    RobotLabel(
-      self.motor[L],
-      self.position[X] + (radius_robot * math.cos(self.position[TH] + math.radians(90)) * 0.4),
-      self.position[Y] + (radius_robot * math.sin(self.position[TH] + math.radians(90)) * 0.4),
-      18
-    )
-    RobotLabel(
-      self.motor[R],
-      self.position[X] + (radius_robot * math.cos(self.position[TH] - math.radians(90)) * 0.4),
-      self.position[Y] + (radius_robot * math.sin(self.position[TH] - math.radians(90)) * 0.4),
-      18
-    )
+    #RobotLabel(
+    #  self.motion[L],
+    #  self.position[X] + (radius_robot * math.cos(self.position[TH] + math.radians(90)) * 0.4),
+    #  self.position[Y] + (radius_robot * math.sin(self.position[TH] + math.radians(90)) * 0.4),
+    #  18
+    #)
+    #RobotLabel(
+    #  self.motion[R],
+    #  self.position[X] + (radius_robot * math.cos(self.position[TH] - math.radians(90)) * 0.4),
+    #  self.position[Y] + (radius_robot * math.sin(self.position[TH] - math.radians(90)) * 0.4),
+    #  18
+    #)
+
 
   def update_position(self, wall_list, dT):
     coll_flag = False # collission flag
     radius_robot = 0.5 * self.axis_length
 
     # Calculating new X, Y & Orientation
-    new_position = self._ForwardKinematics(self.position[X], self.position[Y], self.position[TH], dT)
+    new_position = self.simplified_kinematics(self.position, dT)
 
     # Collision detection
     def check_collision(new_pos, wall_list, collision_flag):
@@ -195,7 +166,7 @@ class Robot():
           collision_flag = True
           # print(wall_conflict)
           if len(wall_conflict) >= 2:
-            return (self.position[X], self.position[Y], th), collision_flag
+            return [self.position[X], self.position[Y], th], collision_flag
 
 
           new = [x, y, th]
@@ -233,7 +204,7 @@ class Robot():
               x = intersection_point[X] - velocity_vector[X]
               y = intersection_point[Y] - velocity_vector[Y]
 
-      return (x, y, th), collision_flag
+      return [x, y, th], collision_flag
 
     new_position, coll_flag = check_collision(new_position, wall_list, coll_flag)
 
