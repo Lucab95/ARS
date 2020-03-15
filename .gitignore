@@ -2,7 +2,7 @@
 __pycache__
 /*.ini
 /desktop.ini
-/04_ANN+EA/Save
-/04_ANN+EA/Score
-/04_ANN+EA/Images
-/04_ANN+EA/Best
+*/Save
+*/Score
+*/Images
+*/Best
