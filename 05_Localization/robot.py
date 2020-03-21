@@ -228,3 +228,28 @@ class Robot():
     self.use_sensors(wall_list)
     self.draw_robot(collision_flag)
     return collision_flag
+
+  def draw_landmarks(self, wall_list, beacons):
+    for beacon in beacons:
+      collide = False
+      point = Point(self.round(beacon[0]), self.round_Y(beacon[1]))
+      # print (self.position)
+      line = LineString([(self.round(self.position[0]),self.round_Y(self.position[1])), (self.round(beacon[0]), self.round_Y(beacon[1]))])
+      distance = point.hausdorff_distance(line)
+      print(distance)
+      if distance < 300:
+        pygame.draw.line(self.screen, (255, 0, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
+                         (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
+        # TODO collision check
+        # # print(rect)
+        # for x,wall in enumerate(wall_list):
+        #   line_wall = LineString([(self.round(wall[0][0]),self.round_Y(wall[0][1])),(self.round(wall[1][0]),self.round_Y(wall[1][1]))])
+        #   if line.intersects(line_wall):
+        #     collide = True
+        #     pygame.draw.line(self.screen, (255, 0, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
+        #                      (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
+        # if not collide:
+        #   pass
+
+    # for wall in wall_list:
+    #     #   if rect.collidepoint()
