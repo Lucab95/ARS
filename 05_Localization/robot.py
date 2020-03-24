@@ -10,6 +10,7 @@ import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
 import data as dt
+import localization
 
 L, R = 0, 1
 X, Y, TH = 0, 1, 2
@@ -19,13 +20,14 @@ inf_number = math.pow(10, 50)
 class Robot():
   def __init__(self, screen, length, max_velocity, max_distance_sensor):
     self.screen = screen
-    self.position = [0, 0, 0]  # X Y TH
+    self.position = [0, 0, 0]  # X Y THradians
     self.axis_length = length
     self.max_velocity = max_velocity
     self.max_distance_sensor = max_distance_sensor
     self.motion = [0, 0] # V, O
     self.color = [90, 90, 90]
     self.sensor_list = [0] * 12
+    self.localization = localization.Localization(self.motion)
 
   def round(self, value):
     return int(round(value))
@@ -229,6 +231,10 @@ class Robot():
     self.draw_robot(collision_flag)
     return collision_flag
 
+  def pose_tracking(self, ):
+    localization.kalman_filter(self.motion)
+
+
   def draw_landmarks(self, wall_list, beacons):
     for beacon in beacons:
       collide = False
@@ -238,7 +244,7 @@ class Robot():
       distance = point.hausdorff_distance(line)
       print(distance)
       if distance < 300:
-        pygame.draw.line(self.screen, (255, 0, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
+        pygame.draw.line(self.screen, (0, 255, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
                          (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
         # TODO collision check
         # # print(rect)
