@@ -8,11 +8,8 @@ class Localization:
         self.real_path = [current_position]
         self.mu = current_motion
         self.sigma = []
-
         self.matrix_A = np.identity(3)
-
         self.matrix_C = np.identity(3)
-
         self.matrix_R = np.diagflat([.1, .2, .3])  # diagonal array init
         self.matrix_Q = np.diagflat([.4, .5, .6])
 

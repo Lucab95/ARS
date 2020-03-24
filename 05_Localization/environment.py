@@ -33,10 +33,11 @@ class Environment():
         return tuple(map(operator.add, a, b))
 
     def new_sensorized_wall(self, pA, pB):
-        if not pA in self.beacons:
-            self.beacons.append(pA)
-        if not pB in self.beacons:
-            self.beacons.append(pB)
+        #MOLTO brutto per il check nell'array ma non ho altro modo per numerarli altrimenti
+        if not [pA,len(self.beacons)-1] in self.beacons:
+            self.beacons.append([pA,len(self.beacons)])
+        if not [pB,len(self.beacons)-1] in self.beacons:
+            self.beacons.append([pB,len(self.beacons)])
         if not [pA, pB] in self.walls:
             self.walls.append([pA, pB])
 
@@ -69,5 +70,5 @@ class Environment():
             pygame.draw.line(self.screen, self.wall_color, self.round_point(wall[0]), self.round_point(wall[1]),
                              self.wall_size)
         for sensor in self.beacons:
-            pygame.draw.circle(self.screen, self.beacon_color, self.round_point(sensor), self.beacon_size,
+            pygame.draw.circle(self.screen, self.beacon_color, self.round_point(sensor[0]), self.beacon_size,
                                self.beacon_size)

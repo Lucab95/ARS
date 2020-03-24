@@ -165,21 +165,21 @@ class Robot():
             pygame.draw.line(self.screen, dt.REAL_PATH_COLOR, current_point, previous_point, 2)
             previous_point = current_point
 
-    def robot_moving(self, walls, beacons, dt):
+    def robot_moving(self, walls,maze_walls, beacons, dt):
         collision_flag = self.update_position(walls, dt)
         self.localization.real_path.append(self.position)
         self.draw_robot(collision_flag)
         self.draw_path(self.localization.real_path)
-        self.draw_sensors(walls, beacons)
+        self.draw_sensors(maze_walls, beacons)
         return collision_flag
 
-    def draw_sensors(self, wall_list, beacons):
+    def draw_sensors(self, maze_walls, beacons):
         for beacon in beacons:
+            # print(beacon[0], beacon[1])
             collide = False
-            point = Point(self.round(beacon[0]), self.round_Y(beacon[1]))
+            point = Point(self.round_point(beacon[0]))
             # print (self.position)
-            line = LineString([(self.round(self.position[0]), self.round_Y(self.position[1])),
-                               (self.round(beacon[0]), self.round_Y(beacon[1]))])
+            line = LineString([(self.round(self.position[0]), self.round_Y(self.position[1])),self.round_point(beacon[0])])
             distance = point.hausdorff_distance(line)
             # print(distance)
             if distance < self.max_distance_sensor:
@@ -187,19 +187,15 @@ class Robot():
                 #                  (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
                 # TODO collision check
                 # print(rect)
-                for wall in wall_list:
-                    print("wall", wall[0][0])
+                for wall in maze_walls:
                     line_wall = LineString([(self.round(wall[0][0]), self.round_Y(wall[0][1])),
                                             (self.round(wall[1][0]), self.round_Y(wall[1][1]))])
                     if line.intersects(line_wall):
-
-                        if beacon[0] != wall[0][0] and beacon[1] != wall[0][1]:
+                        # if beacon[0][0] != wall[0][0] and beacon[0][1] != wall[0][1]:
+                        if not point.intersects(line_wall):
                             collide = True
 
                 if not collide:
                     pygame.draw.line(self.screen, (255, 0, 0),
                                      (self.round(self.position[0]), (self.round_Y(self.position[1]))),
-                                     (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
-
-        # for wall in wall_list:
-        #     #   if rect.collidepoint()
+                                     (self.round_point(beacon[0])), 2)
