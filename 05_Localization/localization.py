@@ -3,28 +3,24 @@ import math
 
 
 class Localization:
-    def __init__(self, current_mu):
-        self.mu = current_mu
+    def __init__(self, current_position, current_motion):
+        self.position = current_position
+        self.real_path = [current_position]
+        self.mu = current_motion
         self.sigma = []
+
         self.matrix_A = np.identity(3)
+
         self.matrix_C = np.identity(3)
 
-        self.matrix_R = np.array([
-                                [0.1,   0,    0],
-                                [0,   0.2,    0],
-                                [0,     0,  0.3]
-                            ])
-        self.matrix_Q = np.array([
-                                [0.4,   0,    0],
-                                [0,   0.5,    0],
-                                [0,     0,  0.6]
-                            ])
+        self.matrix_R = np.diagflat([.1, .2, .3])  # diagonal array init
+        self.matrix_Q = np.diagflat([.4, .5, .6])
 
     def get_maxtrix_B(self, orientation, dT):
         list = [
-            [dT * math.cos(orientation),  0],
-            [dT * math.sin(orientation),  0],
-            [                         0, dT],
+            [dT * math.cos(orientation), 0],
+            [dT * math.sin(orientation), 0],
+            [0, dT],
         ]
         return np.array(list)
 
@@ -42,4 +38,3 @@ class Localization:
         next_sigma = self.next_sigma_prediction(last_sigma, last_matrix_R)
 
         return next_mu, next_sigma
-
