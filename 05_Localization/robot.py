@@ -163,13 +163,20 @@ class Robot():
             previous_point = current_point
 
     def draw_sensors(self, maze_walls, beacons):
+        landmarks = []
         for beacon in beacons:
             # print(beacon[0], beacon[1])
             collide = False
             point = Point(self.round_point(beacon[0]))
+            # print (self.position)
             line = LineString([(self.round(self.position[0]), self.round_Y(self.position[1])),self.round_point(beacon[0])])
             distance = point.hausdorff_distance(line)
+            # print(distance)
             if distance < self.max_distance_sensor:
+                # pygame.draw.line(self.screen, (0, 255, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
+                #                  (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
+                # TODO collision check
+                # print(rect)
                 for wall in maze_walls:
                     line_wall = LineString([(self.round(wall[0][0]), self.round_Y(wall[0][1])),
                                             (self.round(wall[1][0]), self.round_Y(wall[1][1]))])
@@ -182,11 +189,16 @@ class Robot():
                     pygame.draw.line(self.screen, (255, 0, 0),
                                      (self.round(self.position[0]), (self.round_Y(self.position[1]))),
                                      (self.round_point(beacon[0])), 2)
+                    landmarks.append([point,distance])
+        return landmarks
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
         collision_flag = self.update_position(walls, dt)
         self.localization.update_localization(self.position, self.motion, dt)
         self.draw_robot(collision_flag)
         self.draw_path(self.localization.real_path)
-        self.draw_sensors(maze_walls, beacons)
+        landmarks = self.draw_sensors(maze_walls, beacons)
+        if len(landmarks) > 2:
+            # print(landmarks)
+            self.localization.triangulation(landmarks)
         return collision_flag

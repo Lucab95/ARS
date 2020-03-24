@@ -40,3 +40,6 @@ class Localization:
         # TODO fine fai qualcosa
         #self.current_mu = next_mu
         #self.current_sigma = next_sigma
+
+    def triangulation(self,landmarks):
+        print("landmarks")
