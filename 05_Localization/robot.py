@@ -167,27 +167,30 @@ class Robot():
     localization.kalman_filter(self.motion)
 
 
-  def draw_landmarks(self, wall_list, beacons):
+  def draw_sensors(self, wall_list, beacons):
     for beacon in beacons:
       collide = False
       point = Point(self.round(beacon[0]), self.round_Y(beacon[1]))
       # print (self.position)
       line = LineString([(self.round(self.position[0]),self.round_Y(self.position[1])), (self.round(beacon[0]), self.round_Y(beacon[1]))])
       distance = point.hausdorff_distance(line)
-      print(distance)
+      # print(distance)
       if distance < self.max_distance_sensor:
-        pygame.draw.line(self.screen, (0, 255, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
-                         (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
+        # pygame.draw.line(self.screen, (0, 255, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
+        #                  (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
         # TODO collision check
-        # # print(rect)
-        # for x,wall in enumerate(wall_list):
-        #   line_wall = LineString([(self.round(wall[0][0]),self.round_Y(wall[0][1])),(self.round(wall[1][0]),self.round_Y(wall[1][1]))])
-        #   if line.intersects(line_wall):
-        #     collide = True
-        #     pygame.draw.line(self.screen, (255, 0, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
-        #                      (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
-        # if not collide:
-        #   pass
+        # print(rect)
+        for wall in wall_list:
+          print("wall", wall[0][0])
+          line_wall = LineString([(self.round(wall[0][0]),self.round_Y(wall[0][1])),(self.round(wall[1][0]),self.round_Y(wall[1][1]))])
+          if line.intersects(line_wall):
+
+            if beacon[0]!= wall[0][0] and beacon[1] != wall[0][1]:
+              collide = True
+
+        if not collide:
+          pygame.draw.line(self.screen, (255, 0, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
+                           (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
 
     # for wall in wall_list:
     #     #   if rect.collidepoint()

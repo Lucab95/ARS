@@ -15,6 +15,7 @@ class Environment():
 		self.beacon_color = beacon_color
 		self.beacon_size = beacon_size
 		self.beacons = []
+		self.maze_walls = []
 
 		self.margin_corners = [
 			(margin[X], margin[Y]),
@@ -55,8 +56,11 @@ class Environment():
 		self.new_sensorized_wall(sensor1, sensor2)
 		self.new_sensorized_wall(sensor3, sensor4)
 		self.new_sensorized_wall(sensor4, sensor5)
-		self.new_sensorized_wall(sensor1, sensor2)
 		self.new_sensorized_wall(sensor6, sensor7)
+		self.maze_walls.append([sensor1, sensor2])
+		self.maze_walls.append([sensor3, sensor4])
+		self.maze_walls.append([sensor4, sensor5])
+		self.maze_walls.append([sensor6, sensor7])
 
 	def draw_environment(self):
 		for wall in self.walls:

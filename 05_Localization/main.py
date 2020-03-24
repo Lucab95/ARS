@@ -49,6 +49,7 @@ while True:
 	collided = robot.robot_moving(environment.walls, dt.DELTA_T)
 	real_path.append(robot.position)
 	robot.draw_path(real_path)
-	robot.draw_landmarks(environment.walls, environment.beacons)
+	print(environment.walls,"poi", environment.maze_walls)
+	robot.draw_sensors(environment.maze_walls, environment.beacons)
 	pygame.display.update()
 	FPSCLOCK.tick(200) #FPS
