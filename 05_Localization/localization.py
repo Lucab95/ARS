@@ -6,12 +6,19 @@ class Localization:
     def __init__(self, current_mu):
         self.mu = current_mu
         self.sigma = []
-        self.matrix_A = np.array([
-                            [1, 0, 0],
-                            [0, 1, 0],
-                            [0, 0, 1]
-                            ])
+        self.matrix_A = np.identity(3)
+        self.matrix_C = np.identity(3)
 
+        self.matrix_R = np.array([
+                                [0.1,   0,    0],
+                                [0,   0.2,    0],
+                                [0,     0,  0.3]
+                            ])
+        self.matrix_Q = np.array([
+                                [0.4,   0,    0],
+                                [0,   0.5,    0],
+                                [0,     0,  0.6]
+                            ])
 
     def get_maxtrix_B(self, orientation, dT):
         list = [

@@ -22,7 +22,6 @@ environment.maze_environment()
 
 robot = rb.Robot(screen, 2 * dt.ROBOT_RADIUS, dt.MAX_VELOCITY, dt.MAX_DISTANCE_SENSOR)
 robot.position = dt.ROBOT_POSITION
-robot.use_sensors(environment.walls)
 real_path.append(robot.position)
 
 while True:
