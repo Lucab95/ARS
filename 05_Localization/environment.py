@@ -1,5 +1,6 @@
 import pygame
 import operator
+from copy import deepcopy
 
 X, Y, TH = 0, 1, 2
 
@@ -17,7 +18,7 @@ class Environment():
         self.beacon_color = beacon_color
         self.beacon_size = beacon_size
         self.beacons = []
-        self.maze_walls = []
+        self.inner_maze_walls = []
 
         self.margin_corners = [
             (margin[X], margin[Y]),
@@ -33,11 +34,10 @@ class Environment():
         return tuple(map(operator.add, a, b))
 
     def new_sensorized_wall(self, pA, pB):
-        #MOLTO brutto per il check nell'array ma non ho altro modo per numerarli altrimenti
-        if not [pA,len(self.beacons)-1] in self.beacons:
-            self.beacons.append([pA,len(self.beacons)])
-        if not [pB,len(self.beacons)-1] in self.beacons:
-            self.beacons.append([pB,len(self.beacons)])
+        if not pA in self.beacons:
+            self.beacons.append(pA)
+        if not pB in self.beacons:
+            self.beacons.append(pB)
         if not [pA, pB] in self.walls:
             self.walls.append([pA, pB])
 
@@ -60,10 +60,15 @@ class Environment():
         self.new_sensorized_wall(sensor3, sensor4)
         self.new_sensorized_wall(sensor4, sensor5)
         self.new_sensorized_wall(sensor6, sensor7)
-        self.maze_walls.append([sensor1, sensor2])
-        self.maze_walls.append([sensor3, sensor4])
-        self.maze_walls.append([sensor4, sensor5])
-        self.maze_walls.append([sensor6, sensor7])
+        self.inner_maze_walls.append([sensor1, sensor2])
+        self.inner_maze_walls.append([sensor3, sensor4])
+        self.inner_maze_walls.append([sensor4, sensor5])
+        self.inner_maze_walls.append([sensor6, sensor7])
+
+        indexed_beacons = []
+        for index, beacon in enumerate(self.beacons):
+            indexed_beacons.append([beacon, index])
+        self.beacons = deepcopy(indexed_beacons)
 
     def draw_environment(self):
         for wall in self.walls:

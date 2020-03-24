@@ -102,17 +102,14 @@ class Robot():
             # create geometry of robot and path
             robot_center = Point(x, y).buffer(1)
             robot_shape = shapely.affinity.scale(robot_center, radius_robot, radius_robot)
-            # print(robot_shape)
             traveled_line = LineString([(x, y), (self.position[X], self.position[Y])])
 
             wall_conflict = []
             for wall in wall_list:
                 line_wall = LineString([wall[0], wall[1]])
-                # print(wall[1])
                 if robot_shape.intersects(line_wall) or traveled_line.intersects(line_wall):
                     wall_conflict.append(wall)
                     collision_flag = True
-                    # print(wall_conflict)
                     if len(wall_conflict) >= 2:
                         return [self.position[X], self.position[Y], th], collision_flag
 
@@ -165,28 +162,14 @@ class Robot():
             pygame.draw.line(self.screen, dt.REAL_PATH_COLOR, current_point, previous_point, 2)
             previous_point = current_point
 
-    def robot_moving(self, walls,maze_walls, beacons, dt):
-        collision_flag = self.update_position(walls, dt)
-        self.localization.real_path.append(self.position)
-        self.draw_robot(collision_flag)
-        self.draw_path(self.localization.real_path)
-        self.draw_sensors(maze_walls, beacons)
-        return collision_flag
-
     def draw_sensors(self, maze_walls, beacons):
         for beacon in beacons:
             # print(beacon[0], beacon[1])
             collide = False
             point = Point(self.round_point(beacon[0]))
-            # print (self.position)
             line = LineString([(self.round(self.position[0]), self.round_Y(self.position[1])),self.round_point(beacon[0])])
             distance = point.hausdorff_distance(line)
-            # print(distance)
             if distance < self.max_distance_sensor:
-                # pygame.draw.line(self.screen, (0, 255, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
-                #                  (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
-                # TODO collision check
-                # print(rect)
                 for wall in maze_walls:
                     line_wall = LineString([(self.round(wall[0][0]), self.round_Y(wall[0][1])),
                                             (self.round(wall[1][0]), self.round_Y(wall[1][1]))])
@@ -199,3 +182,11 @@ class Robot():
                     pygame.draw.line(self.screen, (255, 0, 0),
                                      (self.round(self.position[0]), (self.round_Y(self.position[1]))),
                                      (self.round_point(beacon[0])), 2)
+
+    def robot_moving(self, walls, maze_walls, beacons, dt):
+        collision_flag = self.update_position(walls, dt)
+        self.localization.update_localization(self.position, self.motion, dt)
+        self.draw_robot(collision_flag)
+        self.draw_path(self.localization.real_path)
+        self.draw_sensors(maze_walls, beacons)
+        return collision_flag

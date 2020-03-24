@@ -1,37 +1,42 @@
 import numpy as np
 import math
-
+X, Y, TH = 0, 1, 2
 
 class Localization:
     def __init__(self, current_position, current_motion):
         self.position = current_position
         self.real_path = [current_position]
-        self.mu = current_motion
-        self.sigma = []
+        self.current_mu = current_motion
+        self.current_sigma = np.diagflat([.001, .002, .003])
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
-        self.matrix_R = np.diagflat([.1, .2, .3])  # diagonal array init
-        self.matrix_Q = np.diagflat([.4, .5, .6])
+        self.matrix_R = np.diagflat([.004, .005, .006])  # diagonal array init
+        self.matrix_Q = np.diagflat([.007, .008, .009])
 
-    def get_maxtrix_B(self, orientation, dT):
-        list = [
-            [dT * math.cos(orientation), 0],
-            [dT * math.sin(orientation), 0],
+    def kalman_filter_prediction(self, position, motion, dT):
+        # PREDICTION
+        u = np.asarray(motion)
+        u = u.T
+        mu = np.array(self.current_mu)
+        matrix_B = np.array([
+            [dT * math.cos(position[TH]), 0],
+            [dT * math.sin(position[TH]), 0],
             [0, dT],
-        ]
-        return np.array(list)
-
-    def next_mu_prediction(self, last_mu, motion, orientation, dT):
-        u = np.array(motion).T
-        matrix_B = self.get_maxtrix_B(orientation, dT)
-        next_mu_pred = np.dot(self.matrix_A, last_mu) + np.dot(matrix_B, u)
-        return next_mu_pred
-
-    def next_sigma_prediction(self, last_sigma, last_matrix_R):
-        return self.matrix_A * last_sigma * self.matrix_A.T + last_matrix_R
-
-    def kalman_filter_prediction(self, last_mu, last_sigma, last_matrix_R, motion, orientation, dT):
-        next_mu = self.next_mu_prediction(last_mu, motion, orientation, dT)
-        next_sigma = self.next_sigma_prediction(last_sigma, last_matrix_R)
+        ])
+        next_mu = np.dot(self.matrix_A, mu.T) + np.dot(matrix_B, u.T)
+        next_sigma = np.dot(np.dot(self.matrix_A, self.current_sigma), self.matrix_A.T) + self.matrix_R
 
         return next_mu, next_sigma
+
+    def update_localization(self, position, motion, dT):
+        self.real_path.append(position)
+        #next_mu, next_sigma = self.kalman_filter_prediction( position, motion, dT)
+        # TODO inizio fai qualcosa
+        #print("MU: ", next_mu)
+        #print("SIGMA: ", next_sigma)
+
+
+
+        # TODO fine fai qualcosa
+        #self.current_mu = next_mu
+        #self.current_sigma = next_sigma

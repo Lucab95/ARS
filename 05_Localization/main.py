@@ -44,6 +44,6 @@ while True:
     # Update screen, robot and environment
     screen.fill(dt.COLOR_SCREEN)  # reupdate screen
     environment.draw_environment()  # Drawing the environment
-    robot.robot_moving(environment.walls,environment.maze_walls, environment.beacons, dt.DELTA_T)
+    robot.robot_moving(environment.walls, environment.inner_maze_walls, environment.beacons, dt.DELTA_T)
     pygame.display.update()
     FPSCLOCK.tick(200)  # FPS
