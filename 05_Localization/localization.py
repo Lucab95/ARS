@@ -51,3 +51,13 @@ class Localization:
 
     def triangulation(self,landmarks):
         print("landmarks")
+        sensor1, sensor2, sensor3 = landmarks[0], landmarks[1], landmarks[2] # [0 = [x,y], 1 = distance]]
+        A= 2 * sensor2[0][0] - 2* sensor1[0][0]
+        B= 2 * sensor2[0][1] - 2* sensor1[0][1]
+        C = sensor1[1]**2 - sensor2[1]**2 - sensor1[0][0]**2 + sensor2[0][0]**2 -sensor1[0][1]**2 + sensor2[0][1]**2
+        D = 2 * sensor3[0][0] - 2* sensor2[0][0]
+        E = 2 * sensor3[0][1] - 2 * sensor2[0][1]
+        F = sensor2[1] ** 2 - sensor3[1] ** 2 - sensor2[0][0] ** 2 + sensor3[0][0] ** 2 - sensor2[0][1] ** 2 + sensor3[0][1] ** 2
+        x = (C*E - F*B) / (E * A - B *D)
+        y = (C*D - A*F) / (B*D - A*E)
+        return x,y

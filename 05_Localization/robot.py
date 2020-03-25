@@ -81,7 +81,7 @@ class Robot():
         # Head of the robot
         head_point_A = self.round_point(self.get_robot_direction_point(0.4 * radius_robot))
         head_point_B = self.round_point(self.get_robot_direction_point(radius_robot))
-        pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
+        # pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
         self.dir = head_point_B
         # self.support_line = (head_point_A, (self.position[0] + radius_robot, head_point_A[1]))
         # print(head_point_B)
@@ -197,7 +197,7 @@ class Robot():
                     pygame.draw.line(self.screen, (255, 0, 0),
                                      (self.round(self.position[0]), (self.round_Y(self.position[1]))),
                                      (self.round_point(beacon[0])), 2)
-                    landmarks.append([line,distance])
+                    landmarks.append([line,distance,beacon])
         return landmarks
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
@@ -209,13 +209,16 @@ class Robot():
 
 
         landmarks = self.draw_sensors(maze_walls, beacons)
-        if len(landmarks) > 0:
+        if len(landmarks) > 2:
             # print(landmarks)
-            self.calculate_degree(landmarks)
-            self.localization.triangulation(landmarks)
+            features = self.calculate_degree(landmarks)
+            x,y= self.localization.triangulation(features)
+            pygame.draw.circle(self.screen, (160, 235, 200), (self.round(x), self.round_Y(y)), 10, 2)
         return collision_flag
 
     def calculate_degree(self,landmarks):
+        # print(landmarks)
+        features = []
         # self.support_line
         # self.dir
         radius = 0.5*self.axis_length
@@ -231,12 +234,15 @@ class Robot():
             beta = np.degrees(np.arctan2((intersection_point.coords[1][1]-self.position[1]),(intersection_point.coords[1][0]-self.position[0])))
             x,y = self.get_robot_direction_point()
             alfa = np.degrees(np.arctan2((y-self.position[1]),(x-self.position[0])))
-
             # alfa, beta = self.exact_degree(alfa, beta)
-            print(beta, alfa)
+            # print(beta, alfa)
             theta = beta - alfa
             theta =self.exact_degree(theta)
-            print(theta)
+            # print(theta)wwwww
+            features.append([line[2][0],line[1]]) # [[x,y],distance]
+            #TODO UTILIZZARE DOPO features.append([line[1], theta, line[2]]) #[distance,beacon_angle, beacon_idx]
+        print(features)
+        return features
 
     def exact_degree(self,alfa):#,beta):
         alfa = (alfa + 360) % 360;
