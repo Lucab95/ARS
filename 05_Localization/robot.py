@@ -60,6 +60,11 @@ class Robot():
 
         return next_position
 
+    def get_robot_direction_point(self, radius = 1):
+        x = self.position[X] + (radius * math.cos(self.position[TH]) * 1)
+        y = self.position[Y] + (radius * math.sin(self.position[TH]) * 1)
+        return (x, y)
+
     def draw_robot(self, coll_flag):
         # Colours for collision
         if coll_flag:
@@ -73,13 +78,8 @@ class Robot():
         pygame.draw.circle(self.screen, robot_color, center_robot, self.round(radius_robot), 2)
 
         # Head of the robot
-        head_x_A = self.position[X] + (radius_robot * math.cos(self.position[TH]) * 1)
-        head_y_A = self.position[Y] + (radius_robot * math.sin(self.position[TH]) * 1)
-        head_x_B = self.position[X] + ((0.4 * radius_robot) * math.cos(self.position[TH]) * 1)
-        head_y_B = self.position[Y] + ((0.4 * radius_robot) * math.sin(self.position[TH]) * 1)
-
-        head_point_A = (self.round(head_x_A), self.round_Y(head_y_A))
-        head_point_B = (self.round(head_x_B), self.round_Y(head_y_B))
+        head_point_A = self.round_point(self.get_robot_direction_point(0.4 * radius_robot))
+        head_point_B = self.round_point(self.get_robot_direction_point(radius_robot))
         pygame.draw.line(self.screen, robot_color, head_point_A, head_point_B, 2)
 
         def draw_path(self, path):
