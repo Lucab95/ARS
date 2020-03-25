@@ -60,4 +60,4 @@ class Localization:
         F = sensor2[1] ** 2 - sensor3[1] ** 2 - sensor2[0][0] ** 2 + sensor3[0][0] ** 2 - sensor2[0][1] ** 2 + sensor3[0][1] ** 2
         x = (C*E - F*B) / (E * A - B *D)
         y = (C*D - A*F) / (B*D - A*E)
-        return x,y
+        return x, y

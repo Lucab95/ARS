@@ -17,8 +17,7 @@ X, Y, TH = 0, 1, 2
 V, O = 0, 1
 inf_number = math.pow(10, 50)
 
-
-class Robot():
+class Robot:
     def __init__(self, screen, length, max_velocity, max_distance_sensor, start_position = [0, 0, 0]):
         self.screen = screen
         self.color = [90, 90, 90]
@@ -65,38 +64,6 @@ class Robot():
         x = self.position[X] + (radius * math.cos(self.position[TH]) * 1)
         y = self.position[Y] + (radius * math.sin(self.position[TH]) * 1)
         return (x, y)
-
-    def draw_robot(self, coll_flag):
-        # Colours for collision
-        if coll_flag:
-            robot_color = (255, 0, 0)
-        else:
-            robot_color = self.color
-
-        # Body of the robot
-        radius_robot = 0.5 * self.axis_length
-        center_robot = (self.round(self.position[X]), self.round_Y(self.position[Y]))
-        pygame.draw.circle(self.screen, robot_color, center_robot, self.round(radius_robot), 2)
-
-        # Head of the robot
-        head_point_A = self.round_point(self.get_robot_direction_point(0.4 * radius_robot))
-        head_point_B = self.round_point(self.get_robot_direction_point(radius_robot))
-        # pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
-        self.dir = head_point_B
-        # self.support_line = (head_point_A, (self.position[0] + radius_robot, head_point_A[1]))
-        # print(head_point_B)
-        pygame.draw.line(self.screen, robot_color, head_point_A, head_point_B, 2)
-        # pygame.draw.line(self.screen, robot_color, self.support_line[0], self.support_line[1], 2) SUPPORT LINE
-
-
-
-
-        def draw_path(self, path):
-            previous_point = self.round_point(path[0][0:2])
-            for point in path:
-                current_point = self.round_point(point[0:2])
-                pygame.draw.line(self.screen, data.REAL_PATH_COLOR, current_point, previous_point, 2)
-                previous_point = current_point
 
     def update_position(self, wall_list, dT):
         coll_flag = False  # collission flag
@@ -163,11 +130,37 @@ class Robot():
         self.position = deepcopy(new_position)
         return coll_flag
 
-    def draw_path(self, path, color):
+    def draw_robot(self, coll_flag):
+        # Colours for collision
+        if coll_flag:
+            robot_color = (255, 0, 0)
+        else:
+            robot_color = self.color
+
+        # Body of the robot
+        radius_robot = 0.5 * self.axis_length
+        center_robot = (self.round(self.position[X]), self.round_Y(self.position[Y]))
+        pygame.draw.circle(self.screen, robot_color, center_robot, self.round(radius_robot), 2)
+
+        # Head of the robot
+        head_point_A = self.round_point(self.get_robot_direction_point(0.4 * radius_robot))
+        head_point_B = self.round_point(self.get_robot_direction_point(radius_robot))
+        pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
+        self.dir = head_point_B
+        # self.support_line = (head_point_A, (self.position[0] + radius_robot, head_point_A[1]))
+        # print(head_point_B)
+        pygame.draw.line(self.screen, robot_color, head_point_A, head_point_B, 2)
+        # pygame.draw.line(self.screen, robot_color, self.support_line[0], self.support_line[1], 2) SUPPORT LINE
+
+    def draw_path(self, path, color, segmented = False):
         previous_point = self.round_point(path[0][0:2])
-        for point in path:
+        for index, point in enumerate(path):
             current_point = self.round_point(point[0:2])
-            pygame.draw.line(self.screen, color, current_point, previous_point, 2)
+            if segmented:
+                if index % 10 < 6:
+                    pygame.draw.line(self.screen, color, current_point, previous_point, 2)
+            else:
+                pygame.draw.line(self.screen, color, current_point, previous_point, 2)
             previous_point = current_point
 
     def draw_sensors(self, maze_walls, beacons):
@@ -194,10 +187,10 @@ class Robot():
                             collide = True
 
                 if not collide:
-                    pygame.draw.line(self.screen, (255, 0, 0),
+                    pygame.draw.line(self.screen, data.COLOR_SENSOR_LINE,
                                      (self.round(self.position[0]), (self.round_Y(self.position[1]))),
                                      (self.round_point(beacon[0])), 2)
-                    landmarks.append([line,distance,beacon])
+                    landmarks.append([line, distance, beacon])
         return landmarks
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
@@ -205,11 +198,11 @@ class Robot():
         collision_flag = self.update_position(walls, dt)
         self.draw_robot(collision_flag)
         self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
-        self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR)
+        self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR, True)
 
 
         landmarks = self.draw_sensors(maze_walls, beacons)
-        if len(landmarks) > 2:
+        if len(landmarks) >= 3:
             # print(landmarks)
             features = self.calculate_degree(landmarks)
             x,y= self.localization.triangulation(features)
@@ -241,11 +234,10 @@ class Robot():
             # print(theta)wwwww
             features.append([line[2][0],line[1]]) # [[x,y],distance]
             #TODO UTILIZZARE DOPO features.append([line[1], theta, line[2]]) #[distance,beacon_angle, beacon_idx]
-        print(features)
+        #print(features)
         return features
 
     def exact_degree(self,alfa):#,beta):
         alfa = (alfa + 360) % 360;
         # beta = (beta + 360) % 360;
         return alfa#,beta
-
