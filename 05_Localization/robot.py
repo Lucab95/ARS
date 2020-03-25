@@ -232,13 +232,14 @@ class Robot():
             x,y = self.get_robot_direction_point()
             alfa = np.degrees(np.arctan2((y-self.position[1]),(x-self.position[0])))
 
-            alfa, beta = self.exact_degree(alfa, beta)
-            print(alfa, beta)
+            # alfa, beta = self.exact_degree(alfa, beta)
+            print(beta, alfa)
             theta = beta - alfa
+            theta =self.exact_degree(theta)
             print(theta)
 
-    def exact_degree(self,alfa,beta):
+    def exact_degree(self,alfa):#,beta):
         alfa = (alfa + 360) % 360;
-        beta = (beta + 360) % 360;
-        return alfa,beta
+        # beta = (beta + 360) % 360;
+        return alfa#,beta
 
