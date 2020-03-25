@@ -3,7 +3,7 @@ import operator
 from copy import deepcopy
 
 X, Y, TH = 0, 1, 2
-
+V, O = 0, 1
 
 class Environment():
 

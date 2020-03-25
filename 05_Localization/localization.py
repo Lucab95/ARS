@@ -1,45 +1,53 @@
 import numpy as np
 import math
+from copy import deepcopy
 X, Y, TH = 0, 1, 2
+V, O = 0, 1
 
 class Localization:
-    def __init__(self, current_position, current_motion):
-        self.position = current_position
-        self.real_path = [current_position]
-        self.current_mu = current_motion
-        self.current_sigma = np.diagflat([.001, .002, .003])
+    def __init__(self, init_position):
+        self.position = init_position
+        self.real_path = [init_position]
+        self.mu_path = [init_position]
+        self.last_mu = init_position
+        self.last_sigma = np.diagflat([.001, .002, .003])
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
         self.matrix_R = np.diagflat([.004, .005, .006])  # diagonal array init
         self.matrix_Q = np.diagflat([.007, .008, .009])
 
-    def kalman_filter_prediction(self, position, motion, dT):
+    def kalman_filter_prediction(self, position, motion, sensor_estimate, dT):
         # PREDICTION
-        u = np.asarray(motion)
-        u = u.T
-        mu = np.array(self.current_mu)
-        matrix_B = np.array([
-            [dT * math.cos(position[TH]), 0],
-            [dT * math.sin(position[TH]), 0],
-            [0, dT],
-        ])
-        next_mu = np.dot(self.matrix_A, mu.T) + np.dot(matrix_B, u.T)
-        next_sigma = np.dot(np.dot(self.matrix_A, self.current_sigma), self.matrix_A.T) + self.matrix_R
+        predicted_mu = deepcopy(position)
+        predicted_mu[X] += math.cos(position[TH]) * dT * motion[V]
+        predicted_mu[X] += math.sin(position[TH]) * dT * motion[V]
+        predicted_mu[X] += dT * motion[O]
+        predicted_mu = np.vstack(predicted_mu)
 
-        return next_mu, next_sigma
+        predicted_sigma = self.last_sigma + self.matrix_R
+
+        #CORRECTION
+        var1 = np.linalg.inv(predicted_sigma + self.matrix_Q)
+        matrix_K = predicted_sigma * var1
+
+        z = np.vstack(sensor_estimate)
+        current_mu = predicted_mu + np.dot(matrix_K, (z - predicted_mu))
+
+        current_sigma = np.dot((np.identity(3) - matrix_K), predicted_sigma)
+
+        return np.hstack(current_mu).tolist(), current_sigma # to put a horizontal list
 
     def update_localization(self, position, motion, dT):
         self.real_path.append(position)
-        #next_mu, next_sigma = self.kalman_filter_prediction( position, motion, dT)
+        current_mu, current_sigma = self.kalman_filter_prediction(position, motion, position, dT)
         # TODO inizio fai qualcosa
-        #print("MU: ", next_mu)
-        #print("SIGMA: ", next_sigma)
 
 
+        self.mu_path.append(current_mu)
 
         # TODO fine fai qualcosa
-        #self.current_mu = next_mu
-        #self.current_sigma = next_sigma
+        self.last_mu = current_mu
+        self.last_sigma = current_sigma
 
     def triangulation(self,landmarks):
         print("landmarks")

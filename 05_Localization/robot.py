@@ -9,7 +9,7 @@ import numpy as np
 import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
-import data as dt
+import data
 import localization
 
 L, R = 0, 1
@@ -27,7 +27,7 @@ class Robot():
         self.max_velocity = max_velocity
         self.motion = [0, 0]  # V, O
         self.max_distance_sensor = max_distance_sensor
-        self.localization = localization.Localization(self.position, self.motion)
+        self.localization = localization.Localization(self.position)
 
     def round(self, value):
         return int(round(value))
@@ -86,7 +86,7 @@ class Robot():
             previous_point = self.round_point(path[0][0:2])
             for point in path:
                 current_point = self.round_point(point[0:2])
-                pygame.draw.line(self.screen, dt.REAL_PATH_COLOR, current_point, previous_point, 2)
+                pygame.draw.line(self.screen, data.REAL_PATH_COLOR, current_point, previous_point, 2)
                 previous_point = current_point
 
     def update_position(self, wall_list, dT):
@@ -155,11 +155,11 @@ class Robot():
         self.position = deepcopy(new_position)
         return coll_flag
 
-    def draw_path(self, path):
+    def draw_path(self, path, color):
         previous_point = self.round_point(path[0][0:2])
         for point in path:
             current_point = self.round_point(point[0:2])
-            pygame.draw.line(self.screen, dt.REAL_PATH_COLOR, current_point, previous_point, 2)
+            pygame.draw.line(self.screen, color, current_point, previous_point, 2)
             previous_point = current_point
 
     def draw_sensors(self, maze_walls, beacons):
@@ -193,10 +193,12 @@ class Robot():
         return landmarks
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
-        collision_flag = self.update_position(walls, dt)
         self.localization.update_localization(self.position, self.motion, dt)
+        collision_flag = self.update_position(walls, dt)
         self.draw_robot(collision_flag)
-        self.draw_path(self.localization.real_path)
+        self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
+        self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR)
+
         landmarks = self.draw_sensors(maze_walls, beacons)
         if len(landmarks) > 2:
             # print(landmarks)
