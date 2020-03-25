@@ -28,6 +28,7 @@ class Robot():
         self.motion = [0, 0]  # V, O
         self.max_distance_sensor = max_distance_sensor
         self.localization = localization.Localization(self.position)
+        self.dir = [0,0]
 
     def round(self, value):
         return int(round(value))
@@ -80,7 +81,15 @@ class Robot():
         # Head of the robot
         head_point_A = self.round_point(self.get_robot_direction_point(0.4 * radius_robot))
         head_point_B = self.round_point(self.get_robot_direction_point(radius_robot))
+        pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
+        self.dir = head_point_B
+        # self.support_line = (head_point_A, (self.position[0] + radius_robot, head_point_A[1]))
+        # print(head_point_B)
         pygame.draw.line(self.screen, robot_color, head_point_A, head_point_B, 2)
+        # pygame.draw.line(self.screen, robot_color, self.support_line[0], self.support_line[1], 2) SUPPORT LINE
+
+
+
 
         def draw_path(self, path):
             previous_point = self.round_point(path[0][0:2])
@@ -103,7 +112,6 @@ class Robot():
             robot_center = Point(x, y).buffer(1)
             robot_shape = shapely.affinity.scale(robot_center, radius_robot, radius_robot)
             traveled_line = LineString([(x, y), (self.position[X], self.position[Y])])
-
             wall_conflict = []
             for wall in wall_list:
                 line_wall = LineString([wall[0], wall[1]])
@@ -167,9 +175,9 @@ class Robot():
         for beacon in beacons:
             # print(beacon[0], beacon[1])
             collide = False
-            point = Point(self.round_point(beacon[0]))
+            point = Point(beacon[0])
             # print (self.position)
-            line = LineString([(self.round(self.position[0]), self.round_Y(self.position[1])),self.round_point(beacon[0])])
+            line = LineString([((self.position[0]), (self.position[1])),beacon[0]])
             distance = point.hausdorff_distance(line)
             # print(distance)
             if distance < self.max_distance_sensor:
@@ -178,8 +186,8 @@ class Robot():
                 # TODO collision check
                 # print(rect)
                 for wall in maze_walls:
-                    line_wall = LineString([(self.round(wall[0][0]), self.round_Y(wall[0][1])),
-                                            (self.round(wall[1][0]), self.round_Y(wall[1][1]))])
+                    line_wall = LineString([(wall[0][0], wall[0][1]),
+                                            (wall[1][0], wall[1][1])])
                     if line.intersects(line_wall):
                         # if beacon[0][0] != wall[0][0] and beacon[0][1] != wall[0][1]:
                         if not point.intersects(line_wall):
@@ -189,7 +197,7 @@ class Robot():
                     pygame.draw.line(self.screen, (255, 0, 0),
                                      (self.round(self.position[0]), (self.round_Y(self.position[1]))),
                                      (self.round_point(beacon[0])), 2)
-                    landmarks.append([point,distance])
+                    landmarks.append([line,distance])
         return landmarks
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
@@ -199,8 +207,38 @@ class Robot():
         self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
         self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR)
 
+
         landmarks = self.draw_sensors(maze_walls, beacons)
-        if len(landmarks) > 2:
+        if len(landmarks) > 0:
             # print(landmarks)
+            self.calculate_degree(landmarks)
             self.localization.triangulation(landmarks)
         return collision_flag
+
+    def calculate_degree(self,landmarks):
+        # self.support_line
+        # self.dir
+        radius = 0.5*self.axis_length
+        robot_center = Point(self.position[X],self.position[Y]).buffer(1)
+        robot_shape = shapely.affinity.scale(robot_center,radius, radius)
+        for line in landmarks:
+            # print(line[0], robot_shape)
+
+            # print(robot_shape.intersection(line[0]))
+            intersection_point =robot_shape.intersection(line[0])
+            # print(pos.coords[0])
+            pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
+            beta = np.degrees(np.arctan2((intersection_point.coords[1][1]-self.position[1]),(intersection_point.coords[1][0]-self.position[0])))
+            x,y = self.get_robot_direction_point()
+            alfa = np.degrees(np.arctan2((y-self.position[1]),(x-self.position[0])))
+
+            alfa, beta = self.exact_degree(alfa, beta)
+            print(alfa, beta)
+            theta = beta - alfa
+            print(theta)
+
+    def exact_degree(self,alfa,beta):
+        alfa = (alfa + 360) % 360;
+        beta = (beta + 360) % 360;
+        return alfa,beta
+
