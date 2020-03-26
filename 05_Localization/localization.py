@@ -25,14 +25,13 @@ class Localization:
     def kalman_filter_prediction(self, position, motion, sensor_estimate, triangulated, dT):
         # PREDICTION
         predicted_mu = deepcopy(self.last_mu)
-
         predicted_mu[X] += math.cos(position[TH]) * dT * motion[V]
         predicted_mu[Y] += math.sin(position[TH]) * dT * motion[V]
         predicted_mu[TH] += dT * motion[O]
 
         predicted_mu = np.vstack(predicted_mu)
         predicted_sigma = self.last_sigma + self.matrix_R
-        print(sensor_estimate)
+        # print(sensor_estimate)
         if not triangulated:
             return np.hstack(predicted_mu).tolist(), predicted_sigma  # to put a horizontal list
         # CORRECTION
@@ -83,9 +82,11 @@ class Localization:
         robot_shape = shapely.affinity.scale(robot_center, radius, radius)
         x, y = self.get_robot_direction_point(position)  # exact pose
         alfa = np.degrees(np.arctan2((y - position[1]), (x - position[0])))
+        current_theta = 0
 
         def exact_degree(alfa):
             return (alfa + 360) % 360
+
 
         for line in landmarks:
             intersection_point = robot_shape.intersection(line[0])
@@ -98,8 +99,11 @@ class Localization:
             fi = exact_degree(fi)
             # print(theta)
             features.append([line[2][0], line[1]])  # [[x,y],distance]
+            current_theta += fi
         # x,y = self.exact_pose(features)
-        z = [x, y, exact_degree(alfa)]
+        print("calculated theta", current_theta/3, "real ", exact_degree(alfa))
+        avg = current_theta/3
+        z = [x, y, avg]
         # print(features)
         # self.z =
 
