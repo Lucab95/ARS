@@ -29,7 +29,7 @@ class Robot:
         self.max_distance_sensor = max_distance_sensor
         self.localization = localization.Localization(self.position)
         self.dir = [0, 0]
-        self.z= []
+        self.z = []
 
     def round(self, value):
         return int(round(value))
@@ -63,7 +63,7 @@ class Robot:
         return next_position
 
     def get_robot_direction_point(self, radius=1):  # TODO sono 2 funzioni, perchè una prende solo radius (here)
-                                                    # TODO in localization ha bisogno della pos, quindi sono 2 funz
+        # TODO in localization ha bisogno della pos, quindi sono 2 funz
 
         x = self.position[X] + (radius * math.cos(self.position[TH]) * 1)
         y = self.position[Y] + (radius * math.sin(self.position[TH]) * 1)
@@ -193,47 +193,16 @@ class Robot:
     def robot_moving(self, walls, maze_walls, beacons, dt):
 
         collision_flag = self.update_position(walls, dt)
+
+        landmarks = self.draw_sensors(maze_walls, beacons)
+        if len(landmarks) >= 3:
+            self.z = self.localization.triangulation(landmarks, self.position)
+            # x, y = self.localization.triangulation(features)
+            pygame.draw.circle(self.screen, (160, 235, 200), (self.round(self.z[0]), self.round_Y(self.z[1])), 5, 2)
+
         self.localization.update_localization(self.position, self.motion, self.z, dt)
         self.draw_robot(collision_flag)
         self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
         self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR, True)
 
-        landmarks = self.draw_sensors(maze_walls, beacons)
-        if len(landmarks) >= 3:
-            self.z= self.localization.triangulation(landmarks, self.position)
-            # x, y = self.localization.triangulation(features)
-            pygame.draw.circle(self.screen, (160, 235, 200), (self.round(self.z[0]), self.round_Y(self.z[1])), 10, 2)
-
         return collision_flag
-
-    # def calculate_degree(self, landmarks):
-    #     # print(landmarks)
-    #     features = []
-    #     z = []
-    #     radius = 0.5 * self.axis_length
-    #     robot_center = Point(self.position[X], self.position[Y]).buffer(1)
-    #     robot_shape = shapely.affinity.scale(robot_center, radius, radius)
-    #
-    #     for line in landmarks:
-    #         intersection_point = robot_shape.intersection(line[0])
-    #         # pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
-    #         beta = np.degrees(np.arctan2((intersection_point.coords[1][1] - self.position[1]),
-    #                                      (intersection_point.coords[1][0] - self.position[0])))
-    #         x, y = self.get_robot_direction_point()
-    #         alfa = np.degrees(np.arctan2((y - self.position[1]), (x - self.position[0])))
-    #         # alfa, beta = self.exact_degree(alfa, beta)
-    #         # print(beta, alfa)
-    #         theta = beta - alfa
-    #         theta = self.exact_degree(theta)
-    #         # print(theta)
-    #         features.append([line[2][0], line[1]])  # [[x,y],distance]
-    #         z.append([line[2][0][0], line[2][0][1], theta])  # [distance,beacon_angle, beacon_idx]
-    #         print(z)
-    #     # print(features)
-    #     return features
-    #
-    # def exact_degree(self, alfa):  # ,beta):
-    #     alfa = (alfa + 360) % 360;
-    #     # beta = (beta + 360) % 360;
-    #     return alfa  # ,beta
-    #

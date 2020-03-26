@@ -8,6 +8,7 @@ import data as dt
 X, Y, TH = 0, 1, 2
 V, O = 0, 1
 
+
 class Localization:
     def __init__(self, init_position):
         self.position = init_position
@@ -38,7 +39,7 @@ class Localization:
         matrix_K = predicted_sigma * var1
         # print(predicted_mu, "matrix \n", matrix_K, "z: \n", sensor_estimate)
         z = np.vstack(sensor_estimate)
-        current_mu =predicted_mu + np.dot(matrix_K, (z - predicted_mu))
+        current_mu = predicted_mu + np.dot(matrix_K, (z - predicted_mu))
         current_sigma = np.dot((np.identity(3) - matrix_K), predicted_sigma)
 
         return np.hstack(current_mu).tolist(), current_sigma  # to put a horizontal list
@@ -69,7 +70,7 @@ class Localization:
         y = (C * D - A * F) / (B * D - A * E)
         return x, y
 
-    def triangulation(self, landmarks,position):
+    def triangulation(self, landmarks, position):
         # print(landmarks)
         # print(position)
         features = []
@@ -78,29 +79,29 @@ class Localization:
         robot_shape = shapely.affinity.scale(robot_center, radius, radius)
         x, y = self.get_robot_direction_point(position)  # exact pose
         alfa = np.degrees(np.arctan2((y - position[1]), (x - position[0])))
+
+        def exact_degree(alfa):
+            return (alfa + 360) % 360
+
         for line in landmarks:
             intersection_point = robot_shape.intersection(line[0])
             # pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
             beta = np.degrees(np.arctan2((intersection_point.coords[1][1] - position[1]),
-                                         (intersection_point.coords[1][0] - position[0]))) #TODO remove this part and implement only via beacons
-                                                                                            #with no intersection point
+                                         (intersection_point.coords[1][0] - position[
+                                             0])))  # TODO remove this part and implement only via beacons
+            # with no intersection point
             fi = beta - alfa
-            fi = self.exact_degree(fi)
+            fi = exact_degree(fi)
             # print(theta)
             features.append([line[2][0], line[1]])  # [[x,y],distance]
-            # z.append([line[2][0][0], line[2][0][1], self.exact_degree(alfa)])  # [x, y, theta] wrong->#[distance,beacon_angle, beacon_idx]
         # x,y = self.exact_pose(features)
-        z = [x,y,self.exact_degree(alfa)]
+        z = [x, y, exact_degree(alfa)]
         # print(features)
         # self.z =
 
         return z
 
-    def exact_degree(self, alfa):
-        alfa = (alfa + 360) % 360;
-        return alfa
-
-    def get_robot_direction_point(self, position, radius = 1):
+    def get_robot_direction_point(self, position, radius=1):
         x = position[X] + (radius * math.cos(position[2]) * 1)
         y = position[Y] + (radius * math.sin(position[2]) * 1)
         return (x, y)
