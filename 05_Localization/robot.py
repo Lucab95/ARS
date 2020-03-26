@@ -145,7 +145,7 @@ class Robot:
         # Head of the robot
         head_point_A = self.round_point(self.get_robot_direction_point(0.4 * radius_robot))
         head_point_B = self.round_point(self.get_robot_direction_point(radius_robot))
-        pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
+        #pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(head_point_A)), 10, 2)
         self.dir = head_point_B
         # self.support_line = (head_point_A, (self.position[0] + radius_robot, head_point_A[1]))
         # print(head_point_B)
@@ -166,23 +166,16 @@ class Robot:
     def draw_sensors(self, maze_walls, beacons):
         landmarks = []
         for beacon in beacons:
-            # print(beacon[0], beacon[1])
             collide = False
             point = Point(beacon[0])
-            # print (self.position)
             line = LineString([((self.position[0]), (self.position[1])),beacon[0]])
             distance = point.hausdorff_distance(line)
-            # print(distance)
             if distance < self.max_distance_sensor:
-                # pygame.draw.line(self.screen, (0, 255, 0), (self.round(self.position[0]), (self.round_Y(self.position[1]))),
-                #                  (self.round(beacon[0]), self.round_Y(beacon[1])), 2)
                 # TODO collision check
-                # print(rect)
                 for wall in maze_walls:
                     line_wall = LineString([(wall[0][0], wall[0][1]),
                                             (wall[1][0], wall[1][1])])
                     if line.intersects(line_wall):
-                        # if beacon[0][0] != wall[0][0] and beacon[0][1] != wall[0][1]:
                         if not point.intersects(line_wall):
                             collide = True
 
@@ -200,30 +193,24 @@ class Robot:
         self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
         self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR, True)
 
-
         landmarks = self.draw_sensors(maze_walls, beacons)
         if len(landmarks) >= 3:
-            # print(landmarks)
             features = self.calculate_degree(landmarks)
             x,y= self.localization.triangulation(features)
             pygame.draw.circle(self.screen, (160, 235, 200), (self.round(x), self.round_Y(y)), 10, 2)
+
         return collision_flag
 
-    def calculate_degree(self,landmarks):
+    def calculate_degree(self, landmarks):
         # print(landmarks)
         features = []
-        # self.support_line
-        # self.dir
         radius = 0.5*self.axis_length
         robot_center = Point(self.position[X],self.position[Y]).buffer(1)
         robot_shape = shapely.affinity.scale(robot_center,radius, radius)
-        for line in landmarks:
-            # print(line[0], robot_shape)
 
-            # print(robot_shape.intersection(line[0]))
+        for line in landmarks:
             intersection_point =robot_shape.intersection(line[0])
-            # print(pos.coords[0])
-            pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
+            #pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
             beta = np.degrees(np.arctan2((intersection_point.coords[1][1]-self.position[1]),(intersection_point.coords[1][0]-self.position[0])))
             x,y = self.get_robot_direction_point()
             alfa = np.degrees(np.arctan2((y-self.position[1]),(x-self.position[0])))
