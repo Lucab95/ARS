@@ -24,7 +24,7 @@ class Localization:
 
     def kalman_filter_prediction(self, position, motion, sensor_estimate, triangulated, dT):
         # PREDICTION
-        predicted_mu = deepcopy(position)
+        predicted_mu = deepcopy(self.last_mu)
 
         predicted_mu[X] += math.cos(position[TH]) * dT * motion[V]
         predicted_mu[Y] += math.sin(position[TH]) * dT * motion[V]
@@ -46,6 +46,7 @@ class Localization:
 
         return np.hstack(current_mu).tolist(), current_sigma  # to put a horizontal list
 
+
     def update_localization(self, position, motion, z, triangulated, dT):
         self.real_path.append(position)
 
@@ -57,6 +58,7 @@ class Localization:
         # TODO fine fai qualcosa
         self.last_mu = current_mu
         self.last_sigma = current_sigma
+
 
     def exact_pose(self, landmarks):
         sensor1, sensor2, sensor3 = landmarks[0], landmarks[1], landmarks[2]  # [0 = [x,y], 1 = distance]]
