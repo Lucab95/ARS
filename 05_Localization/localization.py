@@ -1,6 +1,9 @@
 import numpy as np
 import math
 from copy import deepcopy
+from shapely.geometry import LineString, Point
+import shapely
+import data as dt
 
 X, Y, TH = 0, 1, 2
 V, O = 0, 1
@@ -16,6 +19,7 @@ class Localization:
         self.matrix_C = np.identity(3)
         self.matrix_R = np.diagflat([.004, .005, .006])  # diagonal array init
         self.matrix_Q = np.diagflat([.007, .008, .009])
+        # self.z = []
 
     def kalman_filter_prediction(self, position, motion, sensor_estimate, dT):
         # PREDICTION
@@ -40,6 +44,7 @@ class Localization:
 
     def update_localization(self, position, motion, dT):
         self.real_path.append(position)
+
         current_mu, current_sigma = self.kalman_filter_prediction(position, motion, position, dT)
         # TODO inizio fai qualcosa
 
@@ -62,3 +67,41 @@ class Localization:
         x = (C * E - F * B) / (E * A - B * D)
         y = (C * D - A * F) / (B * D - A * E)
         return x, y
+
+    def calculate_degree(self, landmarks,position):
+        # print(landmarks)
+        # print(position)
+        features = []
+        z = []
+        radius = 0.5 * dt.ROBOT_RADIUS
+        robot_center = Point(position[X], position[Y]).buffer(1)
+        robot_shape = shapely.affinity.scale(robot_center, radius, radius)
+
+        for line in landmarks:
+            intersection_point = robot_shape.intersection(line[0])
+            # pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
+            beta = np.degrees(np.arctan2((intersection_point.coords[1][1] - position[1]),
+                                         (intersection_point.coords[1][0] - position[0]))) #TODO remove this part and implement only via beacons
+                                                                                                #with no intersection point
+            x, y = self.get_robot_direction_point(position) #exact pose
+            alfa = np.degrees(np.arctan2((y - position[1]), (x - position[0])))
+            # alfa, beta = self.exact_degree(alfa, beta)
+            # print(beta, alfa)
+            theta = beta - alfa
+            theta = self.exact_degree(theta)
+            # print(theta)
+            features.append([line[2][0], line[1]])  # [[x,y],distance]
+            z.append([line[2][0][0], line[2][0][1], theta])  # [x, y, theta] wrong->#[distance,beacon_angle, beacon_idx]
+            print("z", z)
+        # print(features)
+        # self.z = z
+        return features
+
+    def exact_degree(self, alfa):
+        alfa = (alfa + 360) % 360;
+        return alfa
+
+    def get_robot_direction_point(self, position, radius = 1):
+        x = position[X] + (radius * math.cos(position[2]) * 1)
+        y = position[Y] + (radius * math.sin(position[2]) * 1)
+        return (x, y)
