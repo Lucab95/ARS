@@ -16,7 +16,7 @@ class Localization:
         self.last_mu = init_position
         self.mu_path = [[init_position, False]]
         self.last_sigma = np.diagflat([0.01, 0.02, 0.03])
-        self.sigma_path = [self.last_sigma]
+        #self.sigma_path = [self.last_sigma]
 
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
@@ -62,7 +62,7 @@ class Localization:
         # TODO inizio fai qualcosa
 
         self.mu_path.append([current_mu, triangulated])  # add path of mu and if its triangulated in that moment
-        self.sigma_path.append(current_sigma)
+        #self.sigma_path.append(current_sigma)
         # TODO fine fai qualcosa
         self.last_mu = current_mu
         self.last_sigma = current_sigma

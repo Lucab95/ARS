@@ -18,7 +18,6 @@ X, Y, TH = 0, 1, 2
 V, O = 0, 1
 inf_number = math.pow(10, 50)
 
-
 class Robot:
     def __init__(self, screen, length, max_velocity, max_distance_sensor, start_position=[0, 0, 0]):
         self.screen = screen
@@ -31,6 +30,7 @@ class Robot:
         self.localization = localization.Localization(self.position)
         self.dir = [0, 0]
         self.z = []
+        self.saved_ellipses = []
 
     def round(self, value):
         return int(round(value))
@@ -164,7 +164,7 @@ class Robot:
             pygame.draw.line(self.screen, color, current_point, previous_point, 2)
             previous_point = current_point
 
-    def draw_estimate_path(self, mu_path, sigma_path, color):
+    def draw_estimate_path(self, mu_path, sigma, color):
         previous_point = self.round_point(mu_path[0][0][0:2])
         for index, point in enumerate(mu_path):
             current_point = self.round_point(point[0][0:2])
@@ -175,9 +175,18 @@ class Robot:
             else:
                 if index % 10 < 6:
                     pygame.draw.line(self.screen, color, current_point, previous_point, 2)
-            if index % 100 == 0:
-                pygame.gfxdraw.ellipse(self.screen, current_point[X], current_point[Y], self.round(sigma_path[index][0][0]), self.round(sigma_path[index][1][1]), (253, 76, 85))
+
+            if index == len(mu_path) - 1 and index % 50 <=15:
+                cov_x, cov_y = self.round(sigma[0][0]), self.round(sigma[1][1])
+                pygame.gfxdraw.ellipse(self.screen, current_point[X], current_point[Y], cov_x, cov_y, data.SIGMA_COLOR)
+                if index % 200 == 0:
+                    self.saved_ellipses.append([current_point, [cov_x, cov_y]])
+
             previous_point = current_point
+
+        for saved_ellipse in self.saved_ellipses:
+            pygame.gfxdraw.ellipse(self.screen, saved_ellipse[0][X], saved_ellipse[0][Y], saved_ellipse[1][0],
+                                   saved_ellipse[1][1], data.SIGMA_COLOR)
 
     def draw_sensors(self, maze_walls, beacons):
         landmarks = []
@@ -218,6 +227,6 @@ class Robot:
 
         self.draw_robot(collision_flag)
         self.draw_real_path(self.localization.real_path, data.REAL_PATH_COLOR)
-        self.draw_estimate_path(self.localization.mu_path, self.localization.sigma_path, data.MU_PATH_COLOR)
+        self.draw_estimate_path(self.localization.mu_path, self.localization.last_sigma, data.MU_PATH_COLOR)
 
         return collision_flag
