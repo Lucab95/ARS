@@ -13,7 +13,7 @@ class Localization:
     def __init__(self, init_position):
         self.position = init_position
         self.real_path = [init_position]
-        self.mu_path = [init_position]
+        self.mu_path = [[init_position, False]]
         self.last_mu = init_position
         self.last_sigma = np.diagflat([1, 1, 1])
         self.matrix_A = np.identity(3)
@@ -22,16 +22,18 @@ class Localization:
         self.matrix_Q = np.diagflat([1, 1, 1])
         self.z = init_position
 
-    def kalman_filter_prediction(self, position, motion, sensor_estimate, dT):
+    def kalman_filter_prediction(self, position, motion, sensor_estimate, triangulated, dT):
         # PREDICTION
         predicted_mu = deepcopy(position)
+
         predicted_mu[X] += math.cos(position[TH]) * dT * motion[V]
-        predicted_mu[X] += math.sin(position[TH]) * dT * motion[V]
-        predicted_mu[X] += dT * motion[O]
+        predicted_mu[Y] += math.sin(position[TH]) * dT * motion[V]
+        predicted_mu[TH] += dT * motion[O]
+
         predicted_mu = np.vstack(predicted_mu)
         predicted_sigma = self.last_sigma + self.matrix_R
         print(sensor_estimate)
-        if len(sensor_estimate) == 0:
+        if not triangulated:
             return np.hstack(predicted_mu).tolist(), predicted_sigma  # to put a horizontal list
         # CORRECTION
         # print (self.z, sensor_estimate)
@@ -44,13 +46,13 @@ class Localization:
 
         return np.hstack(current_mu).tolist(), current_sigma  # to put a horizontal list
 
-    def update_localization(self, position, motion, z, dT):
+    def update_localization(self, position, motion, z, triangulated, dT):
         self.real_path.append(position)
 
-        current_mu, current_sigma = self.kalman_filter_prediction(position, motion, z, dT)
+        current_mu, current_sigma = self.kalman_filter_prediction(position, motion, z, triangulated, dT)
         # TODO inizio fai qualcosa
 
-        self.mu_path.append(current_mu)
+        self.mu_path.append([current_mu, triangulated])  # add path of mu and if its triangulated in that moment
 
         # TODO fine fai qualcosa
         self.last_mu = current_mu

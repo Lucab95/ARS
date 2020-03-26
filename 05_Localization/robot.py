@@ -156,15 +156,25 @@ class Robot:
         pygame.draw.line(self.screen, robot_color, head_point_A, head_point_B, 2)
         # pygame.draw.line(self.screen, robot_color, self.support_line[0], self.support_line[1], 2) SUPPORT LINE
 
-    def draw_path(self, path, color, segmented=False):
+    def draw_real_path(self, path, color):
         previous_point = self.round_point(path[0][0:2])
-        for index, point in enumerate(path):
+        for point in path:
             current_point = self.round_point(point[0:2])
-            if segmented:
+            pygame.draw.line(self.screen, color, current_point, previous_point, 2)
+            previous_point = current_point
+
+    def draw_estimate_path(self, path, color):
+        previous_point = self.round_point(path[0][0][0:2])
+        for index, point in enumerate(path):
+            current_point = self.round_point(point[0][0:2])
+            triangled = point[1]
+
+            if triangled:
+                pygame.draw.line(self.screen, (0, 255, 0), current_point, previous_point, 2)
+            else:
                 if index % 10 < 6:
                     pygame.draw.line(self.screen, color, current_point, previous_point, 2)
-            else:
-                pygame.draw.line(self.screen, color, current_point, previous_point, 2)
+
             previous_point = current_point
 
     def draw_sensors(self, maze_walls, beacons):
@@ -192,17 +202,19 @@ class Robot:
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
 
+        triangulated = False
+
         collision_flag = self.update_position(walls, dt)
 
         landmarks = self.draw_sensors(maze_walls, beacons)
         if len(landmarks) >= 3:
             self.z = self.localization.triangulation(landmarks, self.position)
-            # x, y = self.localization.triangulation(features)
             pygame.draw.circle(self.screen, (160, 235, 200), (self.round(self.z[0]), self.round_Y(self.z[1])), 5, 2)
+            triangulated = True
 
-        self.localization.update_localization(self.position, self.motion, self.z, dt)
+        self.localization.update_localization(self.position, self.motion, self.z, triangulated, dt)
         self.draw_robot(collision_flag)
-        self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
-        self.draw_path(self.localization.mu_path, data.MU_PATH_COLOR, True)
+        self.draw_real_path(self.localization.real_path, data.REAL_PATH_COLOR)
+        self.draw_estimate_path(self.localization.mu_path, data.MU_PATH_COLOR)
 
         return collision_flag
