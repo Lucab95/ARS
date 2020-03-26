@@ -5,7 +5,8 @@ from copy import deepcopy
 X, Y, TH = 0, 1, 2
 V, O = 0, 1
 
-class Environment():
+
+class Environment:
 
     def __init__(self, screen, wall_color=(0, 0, 0), beacon_color=(0, 0, 0), beacon_size=10, wall_size=8,
                  margin=(10, 10)):

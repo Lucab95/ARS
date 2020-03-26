@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from copy import deepcopy
+
 X, Y, TH = 0, 1, 2
 V, O = 0, 1
 
@@ -26,7 +27,7 @@ class Localization:
 
         predicted_sigma = self.last_sigma + self.matrix_R
 
-        #CORRECTION
+        # CORRECTION
         var1 = np.linalg.inv(predicted_sigma + self.matrix_Q)
         matrix_K = predicted_sigma * var1
 
@@ -35,13 +36,12 @@ class Localization:
 
         current_sigma = np.dot((np.identity(3) - matrix_K), predicted_sigma)
 
-        return np.hstack(current_mu).tolist(), current_sigma # to put a horizontal list
+        return np.hstack(current_mu).tolist(), current_sigma  # to put a horizontal list
 
     def update_localization(self, position, motion, dT):
         self.real_path.append(position)
         current_mu, current_sigma = self.kalman_filter_prediction(position, motion, position, dT)
         # TODO inizio fai qualcosa
-
 
         self.mu_path.append(current_mu)
 
@@ -49,15 +49,16 @@ class Localization:
         self.last_mu = current_mu
         self.last_sigma = current_sigma
 
-    def triangulation(self,landmarks):
-        print("landmarks")
-        sensor1, sensor2, sensor3 = landmarks[0], landmarks[1], landmarks[2] # [0 = [x,y], 1 = distance]]
-        A= 2 * sensor2[0][0] - 2* sensor1[0][0]
-        B= 2 * sensor2[0][1] - 2* sensor1[0][1]
-        C = sensor1[1]**2 - sensor2[1]**2 - sensor1[0][0]**2 + sensor2[0][0]**2 -sensor1[0][1]**2 + sensor2[0][1]**2
-        D = 2 * sensor3[0][0] - 2* sensor2[0][0]
+    def triangulation(self, landmarks):
+        sensor1, sensor2, sensor3 = landmarks[0], landmarks[1], landmarks[2]  # [0 = [x,y], 1 = distance]]
+        A = 2 * sensor2[0][0] - 2 * sensor1[0][0]
+        B = 2 * sensor2[0][1] - 2 * sensor1[0][1]
+        C = sensor1[1] ** 2 - sensor2[1] ** 2 - sensor1[0][0] ** 2 + sensor2[0][0] ** 2 - sensor1[0][1] ** 2 + \
+            sensor2[0][1] ** 2
+        D = 2 * sensor3[0][0] - 2 * sensor2[0][0]
         E = 2 * sensor3[0][1] - 2 * sensor2[0][1]
-        F = sensor2[1] ** 2 - sensor3[1] ** 2 - sensor2[0][0] ** 2 + sensor3[0][0] ** 2 - sensor2[0][1] ** 2 + sensor3[0][1] ** 2
-        x = (C*E - F*B) / (E * A - B *D)
-        y = (C*D - A*F) / (B*D - A*E)
+        F = sensor2[1] ** 2 - sensor3[1] ** 2 - sensor2[0][0] ** 2 + sensor3[0][0] ** 2 - sensor2[0][1] ** 2 + \
+            sensor3[0][1] ** 2
+        x = (C * E - F * B) / (E * A - B * D)
+        y = (C * D - A * F) / (B * D - A * E)
         return x, y
