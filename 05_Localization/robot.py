@@ -9,6 +9,7 @@ import numpy as np
 import shapely
 from shapely.geometry import LineString, Point
 from shapely import affinity
+import pygame.gfxdraw
 import data
 import localization
 
@@ -163,9 +164,9 @@ class Robot:
             pygame.draw.line(self.screen, color, current_point, previous_point, 2)
             previous_point = current_point
 
-    def draw_estimate_path(self, path, color):
-        previous_point = self.round_point(path[0][0][0:2])
-        for index, point in enumerate(path):
+    def draw_estimate_path(self, mu_path, sigma_path, color):
+        previous_point = self.round_point(mu_path[0][0][0:2])
+        for index, point in enumerate(mu_path):
             current_point = self.round_point(point[0][0:2])
             triangled = point[1]
 
@@ -174,7 +175,8 @@ class Robot:
             else:
                 if index % 10 < 6:
                     pygame.draw.line(self.screen, color, current_point, previous_point, 2)
-
+            if index % 100 == 0:
+                pygame.gfxdraw.ellipse(self.screen, current_point[X], current_point[Y], self.round(sigma_path[index][0][0]), self.round(sigma_path[index][1][1]), (253, 76, 85))
             previous_point = current_point
 
     def draw_sensors(self, maze_walls, beacons):
@@ -213,8 +215,9 @@ class Robot:
             triangulated = True
 
         self.localization.update_localization(self.position, self.motion, self.z, triangulated, dt)
+
         self.draw_robot(collision_flag)
         self.draw_real_path(self.localization.real_path, data.REAL_PATH_COLOR)
-        self.draw_estimate_path(self.localization.mu_path, data.MU_PATH_COLOR)
+        self.draw_estimate_path(self.localization.mu_path, self.localization.sigma_path, data.MU_PATH_COLOR)
 
         return collision_flag

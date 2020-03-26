@@ -13,37 +13,46 @@ class Localization:
     def __init__(self, init_position):
         self.position = init_position
         self.real_path = [init_position]
-        self.mu_path = [[init_position, False]]
         self.last_mu = init_position
-        self.last_sigma = np.diagflat([1, 1, 1])
+        self.mu_path = [[init_position, False]]
+        self.last_sigma = np.diagflat([0.01, 0.02, 0.03])
+        self.sigma_path = [self.last_sigma]
+
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
-        self.matrix_R = np.diagflat([1, 1, 1])  # diagonal array init
-        self.matrix_Q = np.diagflat([1, 1, 1])
+        self.matrix_R = np.diagflat([0.05, 0.07, 0.11])  # diagonal array init
+        self.matrix_Q = np.diagflat([0.13, 0.17, 0.19])
         self.z = init_position
 
     def kalman_filter_prediction(self, position, motion, sensor_estimate, triangulated, dT):
         # PREDICTION
+
+        # predicted MU
         predicted_mu = deepcopy(self.last_mu)
         predicted_mu[X] += math.cos(position[TH]) * dT * motion[V]
         predicted_mu[Y] += math.sin(position[TH]) * dT * motion[V]
         predicted_mu[TH] += dT * motion[O]
 
         predicted_mu = np.vstack(predicted_mu)
+
+        # predicted SIGMA
         predicted_sigma = self.last_sigma + self.matrix_R
         # print(sensor_estimate)
         if not triangulated:
-            return np.hstack(predicted_mu).tolist(), predicted_sigma  # to put a horizontal list
+            return np.hstack(predicted_mu).tolist(), predicted_sigma  # np.hstack to put a horizontal list
+
         # CORRECTION
-        # print (self.z, sensor_estimate)
         var1 = np.linalg.inv(predicted_sigma + self.matrix_Q)
         matrix_K = predicted_sigma * var1
-        # print(predicted_mu, "matrix \n", matrix_K, "z: \n", sensor_estimate)
-        z = np.vstack(sensor_estimate)
-        current_mu = predicted_mu + np.dot(matrix_K, (z - predicted_mu))
-        current_sigma = np.dot((np.identity(3) - matrix_K), predicted_sigma)
 
-        return np.hstack(current_mu).tolist(), current_sigma  # to put a horizontal list
+        # corrected MU
+        z = np.vstack(sensor_estimate)
+        corrected_mu = predicted_mu + np.dot(matrix_K, (z - predicted_mu))
+
+        # corrected SIGMA
+        corrected_sigma = np.dot((np.identity(3) - matrix_K), predicted_sigma)
+
+        return np.hstack(corrected_mu).tolist(), corrected_sigma
 
 
     def update_localization(self, position, motion, z, triangulated, dT):
@@ -53,7 +62,7 @@ class Localization:
         # TODO inizio fai qualcosa
 
         self.mu_path.append([current_mu, triangulated])  # add path of mu and if its triangulated in that moment
-
+        self.sigma_path.append(current_sigma)
         # TODO fine fai qualcosa
         self.last_mu = current_mu
         self.last_sigma = current_sigma
