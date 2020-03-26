@@ -14,11 +14,11 @@ class Localization:
         self.real_path = [init_position]
         self.mu_path = [init_position]
         self.last_mu = init_position
-        self.last_sigma = np.diagflat([.001, .002, .003])
+        self.last_sigma = np.diagflat([1, 1, 1])
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
-        self.matrix_R = np.diagflat([.004, .005, .006])  # diagonal array init
-        self.matrix_Q = np.diagflat([.007, .008, .009])
+        self.matrix_R = np.diagflat([1, 1, 1])  # diagonal array init
+        self.matrix_Q = np.diagflat([1, 1, 1])
         self.z = init_position
 
     def kalman_filter_prediction(self, position, motion, sensor_estimate, dT):
@@ -28,8 +28,8 @@ class Localization:
         predicted_mu[X] += math.sin(position[TH]) * dT * motion[V]
         predicted_mu[X] += dT * motion[O]
         predicted_mu = np.vstack(predicted_mu)
-
         predicted_sigma = self.last_sigma + self.matrix_R
+        print(sensor_estimate)
         if len(sensor_estimate) == 0:
             return np.hstack(predicted_mu).tolist(), predicted_sigma  # to put a horizontal list
         # CORRECTION
@@ -55,7 +55,7 @@ class Localization:
         self.last_mu = current_mu
         self.last_sigma = current_sigma
 
-    def triangulation(self, landmarks):
+    def exact_pose(self, landmarks):
         sensor1, sensor2, sensor3 = landmarks[0], landmarks[1], landmarks[2]  # [0 = [x,y], 1 = distance]]
         A = 2 * sensor2[0][0] - 2 * sensor1[0][0]
         B = 2 * sensor2[0][1] - 2 * sensor1[0][1]
@@ -69,11 +69,10 @@ class Localization:
         y = (C * D - A * F) / (B * D - A * E)
         return x, y
 
-    def calculate_degree(self, landmarks,position):
+    def triangulation(self, landmarks,position):
         # print(landmarks)
         # print(position)
         features = []
-        z = []
         radius = 0.5 * dt.ROBOT_RADIUS
         robot_center = Point(position[X], position[Y]).buffer(1)
         robot_shape = shapely.affinity.scale(robot_center, radius, radius)
@@ -84,19 +83,18 @@ class Localization:
             # pygame.draw.circle(self.screen, (255, 100, 145), (self.round_point(intersection_point.coords[1])), 10, 2)
             beta = np.degrees(np.arctan2((intersection_point.coords[1][1] - position[1]),
                                          (intersection_point.coords[1][0] - position[0]))) #TODO remove this part and implement only via beacons
-                                                                                                #with no intersection point
-            # alfa, beta = self.exact_degree(alfa, beta)
-            # print(beta, alfa)
-            theta = beta - alfa
-            theta = self.exact_degree(theta)
+                                                                                            #with no intersection point
+            fi = beta - alfa
+            fi = self.exact_degree(fi)
             # print(theta)
             features.append([line[2][0], line[1]])  # [[x,y],distance]
             # z.append([line[2][0][0], line[2][0][1], self.exact_degree(alfa)])  # [x, y, theta] wrong->#[distance,beacon_angle, beacon_idx]
-        z = [x,y,alfa]
+        # x,y = self.exact_pose(features)
+        z = [x,y,self.exact_degree(alfa)]
         # print(features)
         # self.z =
 
-        return features,z
+        return z
 
     def exact_degree(self, alfa):
         alfa = (alfa + 360) % 360;
