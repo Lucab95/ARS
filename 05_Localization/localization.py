@@ -21,7 +21,8 @@ class Localization:
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
         self.matrix_R = np.diagflat([0.05, 0.07, 0.11])  # diagonal array init
-        self.matrix_Q = np.diagflat([0.13, 0.17, 0.19])
+        self.cov_vector = [0.13, 0.17, 0.19]
+        self.matrix_Q = np.diagflat(self.cov_vector)
         self.z = init_position
 
     def kalman_filter_prediction(self, position, motion, sensor_estimate, triangulated, dT):
@@ -53,20 +54,6 @@ class Localization:
         corrected_sigma = np.dot((np.identity(3) - matrix_K), predicted_sigma)
 
         return np.hstack(corrected_mu).tolist(), corrected_sigma
-
-
-    def update_localization(self, position, motion, z, triangulated, dT):
-        self.real_path.append(position)
-
-        current_mu, current_sigma = self.kalman_filter_prediction(position, motion, z, triangulated, dT)
-        # TODO inizio fai qualcosa
-
-        self.mu_path.append([current_mu, triangulated])  # add path of mu and if its triangulated in that moment
-        #self.sigma_path.append(current_sigma)
-        # TODO fine fai qualcosa
-        self.last_mu = current_mu
-        self.last_sigma = current_sigma
-
 
     def exact_pose(self, landmarks):
         sensor1, sensor2, sensor3 = landmarks[0], landmarks[1], landmarks[2]  # [0 = [x,y], 1 = distance]]
@@ -112,7 +99,7 @@ class Localization:
         # x,y = self.exact_pose(features)
         print("calculated theta", current_theta/3, "real ", exact_degree(alfa))
         avg = current_theta/3
-        z = [x, y, avg]
+        z = [x, y, np.radians(avg)]
         # print(features)
         # self.z =
 
@@ -122,3 +109,15 @@ class Localization:
         x = position[X] + (radius * math.cos(position[2]) * 1)
         y = position[Y] + (radius * math.sin(position[2]) * 1)
         return (x, y)
+
+    def update_localization(self, position, motion, z, triangulated, dT):
+        self.real_path.append(position)
+
+        current_mu, current_sigma = self.kalman_filter_prediction(position, motion, z, triangulated, dT)
+        # TODO inizio fai qualcosa
+
+        self.mu_path.append([current_mu, triangulated])  # add path of mu and if its triangulated in that moment
+        #self.sigma_path.append(current_sigma)
+        # TODO fine fai qualcosa
+        self.last_mu = current_mu
+        self.last_sigma = current_sigma

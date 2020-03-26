@@ -29,7 +29,6 @@ class Robot:
         self.max_distance_sensor = max_distance_sensor
         self.localization = localization.Localization(self.position)
         self.dir = [0, 0]
-        self.z = []
         self.saved_ellipses = []
 
     def round(self, value):
@@ -218,12 +217,19 @@ class Robot:
         collision_flag = self.update_position(walls, dt)
 
         landmarks = self.draw_sensors(maze_walls, beacons)
+        z = []
         if len(landmarks) >= 3:
-            self.z = self.localization.triangulation(landmarks, self.position)
-            pygame.draw.circle(self.screen, (160, 235, 200), (self.round(self.z[0]), self.round_Y(self.z[1])), 5, 2)
             triangulated = True
 
-        self.localization.update_localization(self.position, self.motion, self.z, triangulated, dt)
+            z = self.localization.triangulation(landmarks, self.position)
+            #pygame.draw.circle(self.screen, (160, 235, 200), (self.round(z[X]), self.round_Y(z[Y])), 5, 2)
+
+            # sensor noise
+            z[X]  += np.random.normal(0, np.sqrt(self.localization.cov_vector[X]), 1)
+            z[Y]  += np.random.normal(0, np.sqrt(self.localization.cov_vector[Y]), 1)
+            z[TH] += np.random.normal(0, np.sqrt(self.localization.cov_vector[TH]), 1)
+
+        self.localization.update_localization(self.position, self.motion, z, triangulated, dt)
 
         self.draw_robot(collision_flag)
         self.draw_real_path(self.localization.real_path, data.REAL_PATH_COLOR)

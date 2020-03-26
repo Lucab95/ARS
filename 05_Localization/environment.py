@@ -35,10 +35,10 @@ class Environment:
         return tuple(map(operator.add, a, b))
 
     def new_sensorized_wall(self, pA, pB):
-        if not pA in self.beacons:
-            self.beacons.append(pA)
-        if not pB in self.beacons:
-            self.beacons.append(pB)
+        #if not pA in self.beacons:
+        #    self.beacons.append(pA)
+        #if not pB in self.beacons:
+        #    self.beacons.append(pB)
         if not [pA, pB] in self.walls:
             self.walls.append([pA, pB])
 
@@ -65,6 +65,21 @@ class Environment:
         self.inner_maze_walls.append([sensor3, sensor4])
         self.inner_maze_walls.append([sensor4, sensor5])
         self.inner_maze_walls.append([sensor6, sensor7])
+
+        self.beacons.append(self.margin_corners[0])
+        self.beacons.append(self.margin_corners[1])
+        self.beacons.append(self.margin_corners[2])
+        #self.beacons.append(self.margin_corners[3])
+        #self.beacons.append(sensor1)
+        self.beacons.append(sensor2)
+        self.beacons.append(sensor3)
+        self.beacons.append(sensor4)
+        self.beacons.append(sensor5)
+        self.beacons.append(sensor6)
+        self.beacons.append(sensor7)
+
+
+
 
         indexed_beacons = []
         for index, beacon in enumerate(self.beacons):
