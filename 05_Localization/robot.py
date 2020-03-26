@@ -29,6 +29,7 @@ class Robot:
         self.max_distance_sensor = max_distance_sensor
         self.localization = localization.Localization(self.position)
         self.dir = [0, 0]
+        self.z= []
 
     def round(self, value):
         return int(round(value))
@@ -190,7 +191,7 @@ class Robot:
         return landmarks
 
     def robot_moving(self, walls, maze_walls, beacons, dt):
-        self.localization.update_localization(self.position, self.motion, dt)
+        self.localization.update_localization(self.position, self.motion, self.z, dt)
         collision_flag = self.update_position(walls, dt)
         self.draw_robot(collision_flag)
         self.draw_path(self.localization.real_path, data.REAL_PATH_COLOR)
@@ -198,7 +199,7 @@ class Robot:
 
         landmarks = self.draw_sensors(maze_walls, beacons)
         if len(landmarks) >= 3:
-            features = self.localization.calculate_degree(landmarks, self.position)
+            features,self.z = self.localization.calculate_degree(landmarks, self.position)
             x, y = self.localization.triangulation(features)
             pygame.draw.circle(self.screen, (160, 235, 200), (self.round(x), self.round_Y(y)), 10, 2)
 
