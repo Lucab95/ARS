@@ -225,9 +225,9 @@ class Robot:
             #pygame.draw.circle(self.screen, (160, 235, 200), (self.round(z[X]), self.round_Y(z[Y])), 5, 2)
 
             # sensor noise
-            z[X]  += np.random.normal(0, np.sqrt(self.localization.cov_vector[X]), 1)
-            z[Y]  += np.random.normal(0, np.sqrt(self.localization.cov_vector[Y]), 1)
-            z[TH] += np.random.normal(0, np.sqrt(self.localization.cov_vector[TH]), 1)
+            z[X]  += np.random.normal(0, np.sqrt(self.localization.cov_vector_Q[X]), 1)
+            z[Y]  += np.random.normal(0, np.sqrt(self.localization.cov_vector_Q[Y]), 1)
+            z[TH] += np.random.normal(0, np.sqrt(self.localization.cov_vector_Q[TH]), 1)
 
         self.localization.update_localization(self.position, self.motion, z, triangulated, dt)
 

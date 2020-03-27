@@ -20,19 +20,22 @@ class Localization:
 
         self.matrix_A = np.identity(3)
         self.matrix_C = np.identity(3)
-        self.matrix_R = np.diagflat([0.05, 0.07, 0.11])  # diagonal array init
-        self.cov_vector = [0.13, 0.17, 0.19]
-        self.matrix_Q = np.diagflat(self.cov_vector)
+        self.cov_vector_R = [0.05, 0.07, 0.d11]
+        self.matrix_R = np.diagflat(self.cov_vector_R)  # diagonal array init
+        self.cov_vector_Q = [0.13, 0.17, 0.19]
+        self.matrix_Q = np.diagflat(self.cov_vector_Q)
         self.z = init_position
 
     def kalman_filter_prediction(self, position, motion, sensor_estimate, triangulated, dT):
         # PREDICTION
 
         # predicted MU
+        error_epsilon =[0, 0, 0]
+
         predicted_mu = deepcopy(self.last_mu)
-        predicted_mu[X] += math.cos(position[TH]) * dT * motion[V]
-        predicted_mu[Y] += math.sin(position[TH]) * dT * motion[V]
-        predicted_mu[TH] += dT * motion[O]
+        predicted_mu[X] += math.cos(position[TH]) * dT * motion[V] + np.sqrt(self.cov_vector_R[X])
+        predicted_mu[Y] += math.sin(position[TH]) * dT * motion[V] + np.sqrt(self.cov_vector_R[X])
+        predicted_mu[TH] += dT * motion[O] + np.sqrt(self.cov_vector_R[X])
 
         predicted_mu = np.vstack(predicted_mu)
 
